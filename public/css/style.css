@@ -1,0 +1,217 @@
+/* public/css/style.css */
+
+/* 1. Typography Imports */
+/* DM Serif Display (Headings), Montserrat (Body) */
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Montserrat:wght@400;500;600;700&display=swap');
+
+/* Note: 'TT Milk Script' is a premium font. 
+   Using 'Dancing Script' as a free Google Font alternative for script accents if needed. */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
+
+:root {
+    /* --- ELLA RISES COLOR PALETTE (From Image) --- */
+    
+    /* Cool Tones */
+    --er-blue: #99B7C6;       /* Soft Blue */
+    --er-purple: #978EC4;     /* Lavender */
+    --er-green: #9AB59D;      /* Sage Green */
+    
+    /* Warm Tones */
+    --er-light-pink: #FFD8D1; /* Peach/Light Pink */
+    --er-pink: #F9AFB1;       /* Rose Pink */
+    --er-orange: #F4B092;     /* Soft Orange */
+    --er-red: #CE325B;        /* Bold Magenta/Red (Great for CTAs) */
+    
+    /* Neutrals */
+    --er-bg-cream: #F9F5EA;   /* Off-White Background */
+    --er-dark-grey: #3A3F3B;  /* Main Text Color */
+    --er-white: #FFFFFF;      /* Card Backgrounds */
+}
+
+/* --- Global Styles --- */
+body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: var(--er-bg-cream);
+    color: var(--er-dark-grey);
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: 'DM Serif Display', serif; /* Brand Heading Font */
+    color: var(--er-dark-grey);
+}
+
+/* Use for script accents if you add a class="script-font" */
+.script-font {
+    font-family: 'Dancing Script', cursive;
+    color: var(--er-red);
+}
+
+/* --- Navigation --- */
+.navbar {
+    background-color: var(--er-dark-grey) !important; /* Elegant Dark Header */
+    box-shadow: 0 4px 12px rgba(58, 63, 59, 0.15);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.navbar-brand {
+    font-size: 1.8rem;
+    letter-spacing: 1px;
+    color: var(--er-bg-cream) !important;
+}
+
+.nav-link {
+    color: rgba(249, 245, 234, 0.8) !important; /* Cream with opacity */
+    font-weight: 500;
+    font-size: 1rem;
+    margin-left: 10px;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--er-light-pink) !important; /* Light Pink hover */
+    transform: translateY(-1px);
+}
+
+.navbar-text {
+    color: var(--er-bg-cream) !important;
+}
+
+/* --- Buttons --- */
+
+/* Primary Button: Blue (Calm, Professional) */
+.btn-primary {
+    background-color: var(--er-blue);
+    border-color: var(--er-blue);
+    color: var(--er-white);
+    padding: 10px 28px;
+    border-radius: 50px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(153, 183, 198, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #83A1B0; /* Slightly Darker Blue */
+    border-color: #83A1B0;
+    transform: translateY(-2px);
+}
+
+/* Action Button: Red/Magenta (For 'Donate', 'Sign Up') */
+.btn-danger, .btn-cta {
+    background-color: var(--er-red);
+    border-color: var(--er-red);
+    color: var(--er-white);
+    border-radius: 50px;
+    font-weight: 600;
+}
+
+.btn-danger:hover, .btn-cta:hover {
+    background-color: #B0284B;
+    border-color: #B0284B;
+    box-shadow: 0 4px 10px rgba(206, 50, 91, 0.4);
+}
+
+/* Outline Button */
+.btn-outline-primary {
+    color: var(--er-blue);
+    border-color: var(--er-blue);
+    border-radius: 50px;
+    font-weight: 600;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--er-blue);
+    color: var(--er-white);
+}
+
+.btn-outline-light {
+    border-radius: 50px;
+    border-width: 2px;
+}
+
+/* --- Cards --- */
+.card {
+    background-color: var(--er-white);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(58, 63, 59, 0.08); /* Soft dark shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 25px rgba(58, 63, 59, 0.12);
+}
+
+/* Accent Borders for specific cards */
+.login-card {
+    border-top: 8px solid var(--er-purple); /* Lavender accent */
+}
+
+.card-header {
+    background-color: var(--er-white);
+    border-bottom: 2px solid var(--er-bg-cream);
+    color: var(--er-dark-grey);
+    font-family: 'DM Serif Display', serif;
+    font-weight: normal; /* Serif doesn't need bold */
+    font-size: 1.3rem;
+    padding: 1.2rem 1.5rem;
+}
+
+/* --- Tables --- */
+.table {
+    border-collapse: separate;
+    border-spacing: 0; 
+}
+
+.table thead {
+    background-color: var(--er-green); /* Sage Green Header */
+    color: var(--er-white);
+}
+
+.table thead th {
+    border: none;
+    padding: 15px;
+    font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(154, 181, 157, 0.15); /* Light Sage Green hover */
+}
+
+/* Status Badges */
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+}
+.bg-success { background-color: var(--er-green) !important; }
+.bg-warning { background-color: var(--er-orange) !important; color: var(--er-dark-grey); }
+.bg-danger  { background-color: var(--er-red) !important; }
+
+/* --- Forms --- */
+.form-control {
+    background-color: var(--er-bg-cream); /* Input blends with bg */
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px 15px;
+}
+
+.form-control:focus {
+    background-color: var(--er-white);
+    border-color: var(--er-blue);
+    box-shadow: 0 0 0 0.25rem rgba(153, 183, 198, 0.25);
+}
+
+/* --- Footer --- */
+footer {
+    background-color: var(--er-dark-grey);
+    color: var(--er-bg-cream) !important;
+    border-top: 6px solid var(--er-pink); /* Pink accent line */
+}
+
+footer p {
+    opacity: 0.8;
+    margin-bottom: 0;
+}

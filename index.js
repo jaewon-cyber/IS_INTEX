@@ -18,3 +18,9 @@ app.use(
         }
     )
 );
+
+
+// 418 Teapot Route (IS 404 Requirement)
+app.get('/teapot', (req, res) => {
+    res.status(418).render('teapot');
+});

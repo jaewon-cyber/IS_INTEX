@@ -25,12 +25,58 @@ function requireLogin(req, res, next) {
   next();
 }
 
-// 418 Teapot Route (IS 404 Requirement)
-app.get('/teapot', (req, res) => {
-    res.status(418).render('teapot');
+//__________________________________________________________________________
+///// LOGIN /////
+app.get("/login", (req, res) => {
+    res.render("login", { error: null });
+})
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = await knex("users")
+    .where({ username, password })
+    .first();
+
+  if (!user) {
+    return res.render("login", { error: "Invalid login." });
+  }
+
+  req.session.user = user;
+  res.redirect("/");
 });
 
+// LOGOUT
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/login");
+});
 
+//__________________________________________________________________________
+///// CREATE USER /////
+app.get("/createUser", requireLogin, (req, res) => {
+    res.render("users", { error: null });
+})
+
+app.post("/createUser/add")
+
+//__________________________________________________________________________
+///// USERS /////
+app.get("/users", requireLogin, (req, res) => {
+  res.render("users", { error: null });
+});
+
+app.get("/users/display")
+
+//*MANAGER*//
+app.post("/user/add")
+
+app.post("/user/edit")
+
+app.post("/user/delete")
+
+
+//__________________________________________________________________________
 ///// DONATIONS /////
 app.get("/donations", requireLogin, (req, res) => {
   res.render("donations", { error: null });
@@ -40,7 +86,7 @@ app.post("/donations/addUser")
 
 app.post("/donations/addDonation")
 
-//____________________________________________________________________
+//_________________________________________________________________________
 ///// VIEW DONATIONS /////
 app.get("/viewDonations", requireLogin, (req, res) => {
   res.render("viewDonations", { error: null });
@@ -125,19 +171,11 @@ app.post("/survey/delete")
 
 
 //__________________________________________________________________________
-///// USERS /////
-app.get("/users", requireLogin, (req, res) => {
-  res.render("users", { error: null });
+// 418 Teapot Route (IS 404 Requirement)
+app.get('/teapot', (req, res) => {
+    res.status(418).render('teapot');
 });
 
-app.get("/users/display")
-
-//*MANAGER*//
-app.post("/user/add")
-
-app.post("/user/edit")
-
-app.post("/user/delete")
 
 // START SERVER
 // Launch the Express server on the specified port (default: 3000)

@@ -95,3 +95,21 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .login-card {
     border-top: 5px solid var(--er-secondary); 
 }
+
+
+.navbar-nav .nav-link {
+    color: rgba(0, 0, 0, 0.6) !important; 
+    font-weight: 600; 
+}
+
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+    color: rgba(0, 0, 0, 1) !important; 
+    text-decoration: underline; 
+}
+
+
+.navbar-brand {
+    color: rgba(0, 0, 0, 0.9) !important;
+}

@@ -9,3 +9,144 @@ Navigation to events (Users views and manager can maintain) 1
 Navigation to post surveys (User views and manager can maintain) 1
 Navigation to milestones (Users views and manager can maintain) 1
 Navigation to donations(Users views and manager can maintain) 1 -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1</title> <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg navbar-dark custom-bg-blue shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-flower1 me-2"></i>Ella Rises
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item"><a class="nav-link active" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/events">Events</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/participants">Participants</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/donations">Admin</a></li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-blue" href="/login">Login</a>
+                    </li>
+                    <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                         <a href="/donate" class="btn btn-custom-pink rounded-pill px-4 fw-bold">Donate</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="custom-bg-pink py-5 text-center mb-4">
+        <div class="container py-3">
+            <h1 class="display-4 fw-bold text-dark">Welcome to Ella Rises</h1>
+            <p class="lead text-secondary mb-4">Empowering the rising generation of women through STEAM and heritage.</p>
+            <a href="/events" class="btn btn-outline-dark btn-lg rounded-pill px-5 me-2">Explore Events</a>
+        </div>
+    </header>
+
+    <main class="container mb-5 flex-grow-1">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="text-center mb-4">
+                    <h2 class="fw-bold">Our Impact</h2>
+                    <p class="text-muted">See how our programs are making a long-term difference.</p>
+                </div>
+                
+                <div class="card shadow border-0 rounded-4 overflow-hidden">
+                    <div class="card-header custom-bg-blue text-white py-3">
+                        <h5 class="card-title mb-0 fw-bold text-center">Key Success Indicators</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <canvas id="impactChart"></canvas>
+                    </div>
+                    <div class="card-footer bg-white text-center text-muted py-3">
+                        <small>Data updated based on post-event surveys and milestone tracking.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light text-center text-muted py-4 mt-auto">
+        <div class="container">
+            <p class="mb-1">&copy; 2025 Ella Rises. All rights reserved.</p>
+            <small>
+                <a href="/teapot" class="text-decoration-none text-muted me-2">Technical Check (418)</a> | 
+                <a href="#" class="text-decoration-none text-muted ms-2">Privacy Policy</a>
+            </small>
+        </div>
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // 차트 설정 (기존과 동일하지만 색상을 약간 조정)
+        const ctx = document.getElementById('impactChart');
+        
+        // Ella Rises 브랜드 색상 JS 변수
+        const erPink = '#FFD8D1';
+        const erBlue = '#99B7C6';
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Graduation Rate', 'Job Placement', 'Artistic Confidence'],
+                datasets: [{
+                    label: 'Success Metrics (%)',
+                    data: [85, 72, 94], 
+                    backgroundColor: [
+                        'rgba(255, 216, 209, 0.8)', // Pink with opacity
+                        'rgba(153, 183, 198, 0.8)', // Blue with opacity
+                        'rgba(255, 216, 209, 0.8)'  // Pink again
+                    ],
+                    borderColor: [
+                        erPink,
+                        erBlue,
+                        erPink
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 5, 
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false 
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        grid: {
+                            color: '#f0f0f0' 
+                        }
+                    },
+                    x: {
+                         grid: {
+                            display: false 
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

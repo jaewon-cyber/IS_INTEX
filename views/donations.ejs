@@ -1,3 +1,154 @@
 <!-- 
  Professionalism 4
 Ability to add user information and donation 3 -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <nav class="navbar navbar-expand-lg navbar-dark custom-bg-blue shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i class="bi bi-flower1 me-2"></i>Ella Rises
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/events">Events</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/participants">Participants</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/donations">Admin</a></li>
+                    <li class="nav-item ms-lg-2">
+                        <a class="btn btn-light btn-sm rounded-pill px-3 fw-bold text-blue" href="/login">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="custom-bg-pink py-5 text-center mb-4">
+        <div class="container">
+            <h1 class="display-5 fw-bold text-dark">Make a Difference</h1>
+            <p class="lead text-secondary">Your support empowers the next generation of women leaders.</p>
+        </div>
+    </header>
+
+    <main class="container mb-5 flex-grow-1">
+        <div class="row g-5">
+            
+            <div class="col-lg-7">
+                <div class="card shadow border-0 rounded-4 p-4">
+                    <h3 class="fw-bold text-blue mb-4"><i class="bi bi-heart-fill me-2 text-danger"></i>Donate Now</h3>
+                    
+                    <form action="/donate/process" method="POST"> <h6 class="fw-bold mb-3">Select Amount</h6>
+                        <div class="btn-group w-100 mb-3" role="group">
+                            <input type="radio" class="btn-check" name="amount" id="amount25" value="25" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="amount25">$25</label>
+                          
+                            <input type="radio" class="btn-check" name="amount" id="amount50" value="50" autocomplete="off" checked>
+                            <label class="btn btn-outline-secondary" for="amount50">$50</label>
+                          
+                            <input type="radio" class="btn-check" name="amount" id="amount100" value="100" autocomplete="off">
+                            <label class="btn btn-outline-secondary" for="amount100">$100</label>
+                        </div>
+                        <div class="input-group mb-4">
+                            <span class="input-group-text">$</span>
+                            <input type="number" class="form-control" name="customAmount" placeholder="Other Amount">
+                        </div>
+
+                        <h6 class="fw-bold mb-3">Your Information</h6>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="firstName" class="form-label text-muted small">First Name</label>
+                                <input type="text" class="form-control" id="firstName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="lastName" class="form-label text-muted small">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="email" class="form-label text-muted small">Email Address</label>
+                            <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+                        </div>
+
+                        <h6 class="fw-bold mb-3">Payment Details</h6>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Card Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-credit-card"></i></span>
+                                <input type="text" class="form-control" placeholder="0000 0000 0000 0000">
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">Expiration (MM/YY)</label>
+                                <input type="text" class="form-control" placeholder="MM/YY">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted small">CVV</label>
+                                <input type="text" class="form-control" placeholder="123">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-custom-pink w-100 py-3 fw-bold fs-5 rounded-pill shadow-sm">
+                            Complete Donation
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card bg-light border-0 rounded-4 p-4 mb-4">
+                    <h4 class="fw-bold text-dark mb-3">Where your money goes</h4>
+                    <ul class="list-unstyled">
+                        <li class="mb-3 d-flex">
+                            <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                            <span><strong>$25</strong> provides art supplies for one student workshop.</span>
+                        </li>
+                        <li class="mb-3 d-flex">
+                            <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                            <span><strong>$50</strong> sponsors a mentorship session for a future STEAM leader.</span>
+                        </li>
+                        <li class="mb-3 d-flex">
+                            <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                            <span><strong>$100</strong> helps fund venue costs for our annual heritage gala.</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="card border-0 rounded-4 overflow-hidden text-white shadow-sm" style="background-color: var(--er-blue);">
+                    <div class="card-body p-4 text-center">
+                        <i class="bi bi-quote fs-1 opacity-50"></i>
+                        <p class="fs-5 fst-italic">"Ella Rises gave me the confidence to pursue Engineering. I found my voice here."</p>
+                        <p class="fw-bold mb-0">- Maria, Class of 2024</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="bg-light text-center text-muted py-4 mt-auto">
+        <div class="container">
+            <p class="mb-1">&copy; 2025 Ella Rises. All rights reserved.</p>
+            <small>
+                <a href="/teapot" class="text-decoration-none text-muted">Technical Check</a>
+            </small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

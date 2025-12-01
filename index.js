@@ -8,7 +8,7 @@ app.set("view engine", "ejs");
 const port = process.env.PORT || 3000;
 const session = require("express-session");
 
-const session = require("express-session");
+
 
 // Session configuration
 app.use(
@@ -90,8 +90,14 @@ app.post("/user/delete")
 
 
 ///// DONATIONS /////
-app.get("/donations", requireLogin, (req, res) => {
-  res.render("donations", { error: null });
+// 5. Donations
+// You had two files: donations.ejs (likely for public form) and viewDonations.ejs (admin view)
+app.get('/donate', (req, res) => {
+    res.render('donations', { title: 'Donate' });
+});
+
+app.get('/admin/donations', (req, res) => {
+    res.render('viewDonations', { title: 'Donation Records' });
 });
 
 app.post("/donations/addUser")
@@ -148,8 +154,9 @@ app.post("/milestone/delete")
 
 //________________________________________________________________________
 ///// PARTICIPANTS /////
-app.get("/participants", requireLogin, (req, res) => {
-  res.render("participants", { error: null });
+// 4. Main Entities (CRUD)
+app.get('/participants', (req, res) => {
+    res.render('participants', { title: 'Participants' });
 });
 
 //display all participants, search function

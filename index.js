@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const app = express();
 app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
 const port = process.env.PORT || 3000;
 
 const session = require("express-session");
@@ -18,3 +19,9 @@ app.use(
         }
     )
 );
+
+
+// 418 Teapot Route (IS 404 Requirement)
+app.get('/teapot', (req, res) => {
+    res.status(418).render('teapot');
+});

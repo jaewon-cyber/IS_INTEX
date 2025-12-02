@@ -543,6 +543,9 @@ app.get('/admin/donations', isLogged, isManager, async (req, res) => {
                 }
             })
             .orderBy('donationdate', 'desc');
+        // 🔴 [디버깅용 코드] 이 줄을 추가하세요!
+    // 가져온 데이터 중 첫 번째 데이터를 터미널에 출력합니다.
+        console.log("Check Donation Data:", donations[0]);
 
         // 2. 총 기부금 계산 (Grand Total)
         // participantdonations 테이블의 모든 donationamount를 더합니다.
@@ -560,18 +563,6 @@ app.get('/admin/donations', isLogged, isManager, async (req, res) => {
         console.error(err); 
         res.status(500).send(err.message); 
     }
-});
-app.get('/admin/donations', isLogged, isManager, async (req, res) => {
-    // ... (기존 쿼리 부분) ...
-    const donations = await knex('participantdonations')
-        // ... (join 및 select 부분) ...
-        .orderBy('donationdate', 'desc');
-
-    // 🔴 [디버깅용 코드] 이 줄을 추가하세요!
-    // 가져온 데이터 중 첫 번째 데이터를 터미널에 출력합니다.
-    console.log("Check Donation Data:", donations[0]); 
-
-    // ... (총합 계산 및 render 부분) ...
 });
 
 // 418 Teapot

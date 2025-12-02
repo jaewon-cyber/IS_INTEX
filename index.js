@@ -28,7 +28,7 @@ const knex = require("knex")({
     connection: {
         host: process.env.DB_HOST || "localhost",
         user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "admin",
+        password: process.env.DB_PASSWORD || "admin123",
         database: process.env.DB_NAME || "ellarises",
         port: process.env.DB_PORT || 5432,
         ssl: process.env.DB_SSL ? { rejectUnauthorized: false } : false

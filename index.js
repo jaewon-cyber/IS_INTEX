@@ -129,15 +129,28 @@ app.get('/participants', isLogged, async (req, res) => {
     }
 });
 
-// ✅ 2. 참가자 상세 보기 (View) - 이 부분이 없어서 에러가 난 것임!
+// 2. 참가자 상세 보기 (View Details) - 마일스톤 추가됨
 app.get('/participants/view/:id', isLogged, async (req, res) => {
     try {
+        // 1. 참가자 기본 정보 조회
         const participant = await knex('participantinfo')
             .where({ participantid: req.params.id })
             .first();
 
         if (participant) {
-            res.render('participantDetail', { title: 'Participant Details', participant });
+            // 2. 해당 참가자의 마일스톤 조회 (Milestones 테이블과 조인)
+            const milestones = await knex('participantmilestones')
+                .join('milestones', 'participantmilestones.milestoneid', 'milestones.milestoneid')
+                .select('milestones.milestonetitle', 'participantmilestones.milestonedate')
+                .where('participantmilestones.participantid', req.params.id)
+                .orderBy('participantmilestones.milestonedate', 'desc');
+
+            // 뷰에 participant와 milestones 둘 다 전달
+            res.render('participantDetail', { 
+                title: 'Participant Details', 
+                participant, 
+                milestones 
+            });
         } else {
             res.status(404).send("Participant not found.");
         }

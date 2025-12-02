@@ -18,12 +18,11 @@ app.use(
         secret: process.env.SESSION_SECRET || 'ellarises-secret',
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: 1000 * 60 * 60 * 24 } // 24 hours
+        cookie: { maxAge: 1000 * 60 * 60 * 24 }
     })
 );
 
 // --- 3. DATABASE CONNECTION ---
-// DB 이름과 비밀번호는 본인 환경에 맞게 .env 또는 여기서 수정하세요
 const knex = require("knex")({
     client: "pg",
     connection: {
@@ -36,30 +35,27 @@ const knex = require("knex")({
     }
 });
 
-// --- 4. CUSTOM MIDDLEWARE (권한 체크) ---
-
-// 로그인 여부 확인
+// --- 4. CUSTOM MIDDLEWARE ---
 const isLogged = (req, res, next) => {
     if (req.session.user) {
-        res.locals.user = req.session.user; // 모든 EJS에서 user 변수 사용 가능하게 함
+        res.locals.user = req.session.user;
         next();
     } else {
         res.redirect('/login');
     }
 };
 
-// 매니저/관리자 권한 확인 (수정/삭제 기능 보호용)
 const isManager = (req, res, next) => {
     if (req.session.user && (req.session.user.role === 'manager' || req.session.user.role === 'admin')) {
         next();
     } else {
-        res.status(403).send("Access Denied: You do not have permission to perform this action.");
+        res.status(403).send("Access Denied.");
     }
 };
 
 // --- ROUTES ---
 
-// 1. Landing Page (Public)
+// 1. Landing Page
 app.get('/', (req, res) => {
     res.render('index', { 
         title: 'Home - Ella Rises', 
@@ -67,7 +63,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// 2. Authentication (Login/Logout)
+// 2. Authentication
 app.get('/login', (req, res) => {
     res.render('login', { title: 'Login', error: null });
 });
@@ -75,12 +71,13 @@ app.get('/login', (req, res) => {
 app.post('/login', async (req, res) => {
     const { email, password } = req.body;
     try {
-        const user = await knex('ParticipantInfo').where({ ParticipantEmail: email }).first();
-        // 비밀번호 평문 비교 (Rubric Professionalism에 따라 실제론 암호화 추천하나 요청대로 유지)
-        if (user && user.ParticipantPassword === password) {
+        // 소문자 컬럼명 사용 (participantemail)
+        const user = await knex('participantinfo').where({ participantemail: email }).first();
+        
+        if (user && user.participantpassword === password) {
             req.session.user = {
-                id: user.ParticipantEmail,
-                role: user.ParticipantRole // 'admin', 'manager', 'participant'
+                id: user.participantemail,
+                role: user.participantrole // role도 소문자
             };
             req.session.save(() => res.redirect('/'));
         } else {
@@ -96,50 +93,47 @@ app.get('/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/'));
 });
 
-// 3. User Maintenance (Admin Only)
-// 관리자 계정만 관리하는 페이지
+// 3. User Maintenance
 app.get('/users', isLogged, isManager, async (req, res) => {
     const search = req.query.search || '';
     try {
-        const users = await knex('ParticipantInfo')
-            .where('ParticipantEmail', 'ilike', `%${search}%`)
-            .orWhere('ParticipantRole', 'ilike', `%${search}%`)
-            .orderBy('ParticipantId');
+        const users = await knex('participantinfo')
+            .where('participantemail', 'ilike', `%${search}%`) // 컬럼명 소문자
+            .orderBy('participantid');
         
         res.render('users', { title: 'User Maintenance', users, search });
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
-// 4. Participants Maintenance (View: All, Edit: Manager)
+// 4. Participants Maintenance
 app.get('/participants', isLogged, async (req, res) => {
     const search = req.query.search || '';
     try {
-        // 일반 참가자 목록 조회
-        const participants = await knex('ParticipantInfo')
+        const participants = await knex('participantinfo')
             .where(builder => {
-                if(search) builder.where('ParticipantEmail', 'ilike', `%${search}%`);
+                if(search) builder.where('participantemail', 'ilike', `%${search}%`);
             })
-            .orderBy('ParticipantId');
+            .orderBy('participantid');
 
         res.render('participants', { title: 'Participants', participants, search });
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
-// 참가자 삭제 (Manager Only)
 app.post('/participants/delete/:id', isLogged, isManager, async (req, res) => {
     try {
-        await knex('ParticipantInfo').where({ ParticipantId: req.params.id }).del();
+        await knex('participantinfo').where({ participantid: req.params.id }).del();
         res.redirect('/participants');
-    } catch (err) { console.error(err); res.send("Error deleting participant. They might have related data."); }
+    } catch (err) { console.error(err); res.send("Error deleting participant."); }
 });
 
 // 5. Events Maintenance
 app.get('/events', isLogged, async (req, res) => {
     const search = req.query.search || '';
     try {
-        const events = await knex('EventTemplates')
-            .where('EventName', 'ilike', `%${search}%`)
-            .orderBy('EventTemplateId');
+        // 테이블명도 DB 실제 이름 확인 필요 (보통 소문자 추천)
+        const events = await knex('eventtemplates') 
+            .where('eventname', 'ilike', `%${search}%`)
+            .orderBy('eventtemplateid');
         res.render('events', { title: 'Events', events, search });
     } catch (err) { console.error(err); res.send(err.message); }
 });
@@ -148,54 +142,43 @@ app.get('/events', isLogged, async (req, res) => {
 app.get('/milestones', isLogged, async (req, res) => {
     const search = req.query.search || '';
     try {
-        const milestones = await knex('Milestones')
-            .where('MilestoneTitle', 'ilike', `%${search}%`)
-            .orderBy('MilestoneId');
+        const milestones = await knex('milestones')
+            .where('milestonetitle', 'ilike', `%${search}%`)
+            .orderBy('milestoneid');
         res.render('milestones', { title: 'Milestones', milestones, search });
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
-// 7. Post Surveys (View Only or Manage)
+// 7. Post Surveys
 app.get('/surveys', isLogged, async (req, res) => {
     try {
-        // 설문 결과 조회 (조인 사용)
-        const surveys = await knex('SurveyResponses')
-            .join('SurveyQuestions', 'SurveyResponses.QuestionId', 'SurveyQuestions.QuestionId')
-            .select('SurveyResponses.*', 'SurveyQuestions.Question')
-            .limit(50); // 너무 많으면 느려지니 제한
+        const surveys = await knex('surveyresponses')
+            .join('surveyquestions', 'surveyresponses.questionid', 'surveyquestions.questionid')
+            .select('surveyresponses.*', 'surveyquestions.question')
+            .limit(50);
         res.render('surveys', { title: 'Survey Results', surveys });
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
-// 8. Donations (Admin View & Public View)
-
-// A. Public Visitor Donation (누구나 접근 가능)
-app.get('/donate', (req, res) => {
-    res.render('donations', { title: 'Donate', user: req.session.user || null });
-});
-
-app.post('/donate', async (req, res) => {
-    // 실제로는 결제 로직이 들어가지만, 여기선 DB에 기록만
-    const { amount, donorName } = req.body;
-    // 간단히 구현 (Visitor용 테이블이 없으면 생략 가능하지만 로직상 구현)
-    // 여기선 그냥 성공 페이지로 리다이렉트
-    res.redirect('/'); 
-});
-
-// B. Donation Maintenance (Admin Only - View Records)
+// 8. Donations (Admin)
 app.get('/admin/donations', isLogged, isManager, async (req, res) => {
     const search = req.query.search || '';
     try {
-        const donations = await knex('ParticipantDonations')
-            .join('ParticipantInfo', 'ParticipantDonations.ParticipantId', 'ParticipantInfo.ParticipantId')
-            .select('ParticipantDonations.*', 'ParticipantInfo.ParticipantEmail', 'ParticipantInfo.ParticipantFirstName')
-            .orderBy('DonationDate', 'desc');
+        const donations = await knex('participantdonations')
+            .join('participantinfo', 'participantdonations.participantid', 'participantinfo.participantid')
+            .select('participantdonations.*', 'participantinfo.participantemail', 'participantinfo.participantfirstname')
+            .orderBy('donationdate', 'desc');
 
         res.render('viewDonations', { title: 'Donation Records', donations, search });
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
-// 9. Teapot
+// Donation Public Page
+app.get('/donate', (req, res) => {
+    res.render('donations', { title: 'Donate', user: req.session.user || null });
+});
+
+// 418 Teapot
 app.get('/teapot', (req, res) => {
     res.status(418).render('teapot', { title: '418' });
 });

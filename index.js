@@ -41,106 +41,83 @@ const knex = require("knex")({
   }
 });
 
-
+// Middleware to protect routes
 function requireLogin(req, res, next) {
-  if (!req.session.user) return res.redirect("/login");
-  next();
-}
-
-// 418 Teapot Route (IS 404 Requirement)
-app.get('/teapot', (req, res) => {
-    res.status(418).render('teapot');
-});
-
-
-
-app.get('/login', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/');
-    }
-    res.render('login', { title: 'Login', error: null });
-});
-
-// Login Logic
-app.post('/login', async (req, res) => {
-    // Now req.body will work because of the middleware added above
-    const { email, password } = req.body; 
-
-    try {
-        const user = await knex('participantinfo') // Changed 'db' to 'knex' to match your variable name
-            .where({ participantemail: email }) 
-            .first();
-
-        if (user && user.Participantpassword === password) {
-            req.session.user = {
-                id: user.participantEmail,
-                role: user.participantRole
-            };
-            
-            req.session.save(() => {
-                if (user.participantrole === 'admin') {
-                    res.redirect('/admin/donations');
-                } else {
-                    res.redirect('/');
-                }
-            });
-        } else {
-            res.render('login', { title: 'Login', error: 'Invalid email or password.' });
-        }
-    } catch (err) {
-        console.error('Login Error:', err);
-        res.render('login', { title: 'Login', error: 'Database error occurred.' });
-    }
-});
-
+    if (!req.session.user) return res.redirect("/login");
+    next();
+  }
   
-// LOGOUT
-app.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/login");
-});
-
-
-// Dashboard Page
-app.get("/", async (req, res) => {
-    try {
-      let firstName = "Student";
-      let isStudentUser = false;
-  
-      if (req.session.userId) {
-        const student = await knex("students")
-          .where("student_id", req.session.userId)
-          .first();
-  
-        if (student) {
-          firstName = student.stud_first_name;
-        } else if (req.session.username) {
-          firstName = req.session.username;
-        }
-      }
-  
-      // Compare the displayed firstName to "Student" (case-insensitive)
-      if (firstName.toLowerCase() === "student") {
-        isStudentUser = true;
-      }
-  
-      res.render("index", {
-        firstName,
-        isStudentUser,
-        userId: req.session.userId
-      });
-  
-    } catch (err) {
-      console.error("Dashboard Error:", err);
-  
-      res.render("index", {
-        firstName: "Student",
-        isStudentUser: true // fallback: treat default "Student" as the placeholder user
-      });
-    }
+  // 418 Teapot Route (IS 404 Requirement)
+  app.get('/teapot', (req, res) => {
+      res.status(418).render('teapot');
   });
   
-
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server running on port ${process.env.PORT || 3000}`);
-});
+  // --- LOGIN ROUTES ---
+  
+  app.get('/login', (req, res) => {
+      if (req.session.user) {
+          return res.redirect('/');
+      }
+      res.render('login', { title: 'Login', error: null });
+  });
+  
+  app.post('/login', async (req, res) => {
+      const { email, password } = req.body; 
+  
+      try {
+          // Query the database
+          const user = await knex('participantinfo')
+              .where({ participantemail: email }) 
+              .first();
+  
+          // ✅ DEBUG: Print the user object to Terminal to check column names
+          console.log("DB Result:", user); 
+  
+          // ✅ FIX: Access properties in lowercase (Knex/Postgres standard)
+          if (user && user.participantpassword === password) {
+              
+              // Save session
+              req.session.user = {
+                  id: user.participantemail,
+                  role: user.participantrole
+              };
+              
+              // Save and Redirect
+              req.session.save(() => {
+                  if (user.participantrole === 'admin') {
+                      res.redirect('/admin/donations');
+                  } else {
+                      res.redirect('/');
+                  }
+              });
+          } else {
+              res.render('login', { title: 'Login', error: 'Invalid email or password.' });
+          }
+      } catch (err) {
+          console.error('Login Error:', err);
+          res.render('login', { title: 'Login', error: 'Database error occurred.' });
+      }
+  });
+  
+  // LOGOUT
+  app.get("/logout", (req, res) => {
+    req.session.destroy();
+    res.redirect("/login");
+  });
+  
+  // --- DASHBOARD (HOME) ---
+  app.get("/", (req, res) => {
+      // Check if user is logged in
+      const user = req.session.user;
+  
+      // Render the index page and pass the user info
+      res.render("index", {
+          title: "Home - Ella Rises",
+          user: user // Pass user object to EJS (will be undefined if not logged in)
+      });
+  });
+  
+  // Start Server
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });

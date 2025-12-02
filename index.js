@@ -350,7 +350,11 @@ app.post('/events/delete/:id', isLogged, isManager, async (req, res) => {
 
 
 
-// 6. Milestones Maintenance
+// ==========================================
+// --- MILESTONES ROUTES (전체 교체) ---
+// ==========================================
+
+// 1. 마일스톤 목록 조회
 app.get('/milestones', isLogged, async (req, res) => {
     const search = req.query.search || '';
     try {
@@ -361,7 +365,88 @@ app.get('/milestones', isLogged, async (req, res) => {
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
-// --- SURVEYS ROUTES ---
+// ✅ 2. 마일스톤 상세 보기 (누가 달성했는지 조회)
+app.get('/milestones/view/:id', isLogged, async (req, res) => {
+    try {
+        // (1) 마일스톤 정보 가져오기
+        const milestone = await knex('milestones')
+            .where({ milestoneid: req.params.id })
+            .first();
+
+        if (milestone) {
+            // (2) 이 마일스톤을 달성한 참가자들 가져오기 (Join)
+            const achievers = await knex('participantmilestones')
+                .join('participantinfo', 'participantmilestones.participantid', 'participantinfo.participantid')
+                .select(
+                    'participantinfo.participantfirstname',
+                    'participantinfo.participantlastname',
+                    'participantinfo.participantemail',
+                    'participantmilestones.milestonedate'
+                )
+                .where('participantmilestones.milestoneid', req.params.id)
+                .orderBy('participantmilestones.milestonedate', 'desc');
+
+            res.render('milestoneDetail', { title: 'Milestone Details', milestone, achievers });
+        } else {
+            res.status(404).send("Milestone not found.");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error loading milestone details.");
+    }
+});
+
+// ✅ 3. 마일스톤 추가 페이지 (GET)
+app.get('/milestones/add', isLogged, isManager, (req, res) => {
+    res.render('addMilestone', { title: 'Add New Milestone' });
+});
+
+// 4. 마일스톤 추가 로직 (POST)
+app.post('/milestones/add', isLogged, isManager, async (req, res) => {
+    const { title } = req.body;
+    try {
+        await knex('milestones').insert({
+            milestonetitle: title
+        });
+        res.redirect('/milestones');
+    } catch (err) { console.error(err); res.status(500).send("Error adding milestone."); }
+});
+
+// ✅ 5. 마일스톤 수정 페이지 (GET)
+app.get('/milestones/edit/:id', isLogged, isManager, async (req, res) => {
+    try {
+        const milestone = await knex('milestones')
+            .where({ milestoneid: req.params.id })
+            .first();
+        if (milestone) {
+            res.render('editMilestone', { title: 'Edit Milestone', milestone });
+        } else {
+            res.redirect('/milestones');
+        }
+    } catch (err) { console.error(err); res.status(500).send("Error loading milestone."); }
+});
+
+// 6. 마일스톤 수정 로직 (POST)
+app.post('/milestones/edit/:id', isLogged, isManager, async (req, res) => {
+    const { title } = req.body;
+    try {
+        await knex('milestones')
+            .where({ milestoneid: req.params.id })
+            .update({ milestonetitle: title });
+        res.redirect('/milestones');
+    } catch (err) { console.error(err); res.status(500).send("Error updating milestone."); }
+});
+
+// 7. 마일스톤 삭제 로직 (POST)
+app.post('/milestones/delete/:id', isLogged, isManager, async (req, res) => {
+    try {
+        await knex('milestones').where({ milestoneid: req.params.id }).del();
+        res.redirect('/milestones');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error deleting milestone. It may be assigned to participants.<br><a href='/milestones'>Go Back</a>");
+    }
+});
 // --- SURVEYS ROUTES ---
 
 // index.js

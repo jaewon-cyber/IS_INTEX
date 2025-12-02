@@ -35,7 +35,7 @@ const knex = require("knex")({
       host : process.env.DB_HOST || "localhost",
       user : process.env.DB_USER || "postgres",
       password : process.env.DB_PASSWORD || "admin",
-      database : process.env.DB_NAME || "ellarised",
+      database : process.env.DB_NAME || "ellarises",
       port : process.env.DB_PORT || 5432,  
       ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false 
   
@@ -101,6 +101,15 @@ app.get('/teapot', (req, res) => {
   res.status(418);
   res.render('teapot', { title: '418 I\'m a Teapot' });
 });
+// 1. GET Login Page
+app.get('/login', (req, res) => {
+  // If user is already logged in, redirect to home
+  if (req.session.user) {
+      return res.redirect('/');
+  }
+  res.render('login', { title: 'Login', error: null });
+});
+
 
 app.post('/login', async (req, res) => {
   

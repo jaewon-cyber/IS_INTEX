@@ -202,7 +202,24 @@ app.post('/events/edit/:id', isLogged, isManager, async (req, res) => {
         res.status(500).send("Error updating event.");
     }
 });
+app.post('/events/delete/:id', isLogged, isManager, async (req, res) => {
+    const eventId = req.params.id;
 
+    try {
+        // DB에서 삭제 시도
+        // 주의: 이미 일정(EventOccurrences)이나 설문(Surveys)에 사용된 이벤트는 
+        // 외래 키(Foreign Key) 제약 조건 때문에 삭제되지 않을 수 있습니다.
+        await knex('eventtemplates')
+            .where({ eventtemplateid: eventId })
+            .del();
+            
+        res.redirect('/events');
+    } catch (err) {
+        console.error("Delete Error:", err);
+        // 사용자에게 삭제 실패 이유 알림 (보통 데이터가 연결되어 있어서 삭제 못 함)
+        res.status(500).send("Error deleting event. <br>This event might be linked to existing schedules or surveys.<br><a href='/events'>Go Back</a>");
+    }
+});
 // 6. Milestones Maintenance
 app.get('/milestones', isLogged, async (req, res) => {
     const search = req.query.search || '';

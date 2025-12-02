@@ -145,23 +145,30 @@ app.get('/events/add', isLogged, isManager, (req, res) => {
     res.render('addEvent', { title: 'Add New Event' });
 });
 
-// 2. 이벤트 추가 로직 처리 (POST)
+// 2. 이벤트 추가 로직 (POST) - ID 자동 계산 버전
 app.post('/events/add', isLogged, isManager, async (req, res) => {
-    // HTML form의 name 속성과 일치해야 함
     const { eventName, eventType, eventRecurrence, eventDescription, eventCapacity } = req.body;
 
     try {
+        // [1단계] 현재 DB에서 가장 큰 ID 번호를 조회합니다.
+        // (DB 자동 생성기가 고장 났을 때를 대비한 안전장치)
+        const result = await knex('eventtemplates').max('eventtemplateid as maxId').first();
+        const nextId = (result.maxId || 0) + 1; // 기존 데이터가 없으면 1번, 있으면 (최대값+1)번
+
+        // [2단계] 직접 계산한 nextId를 포함해서 저장합니다.
         await knex('eventtemplates').insert({
+            eventtemplateid: nextId,  // ✅ 핵심: ID를 강제로 지정해서 넣음 (에러 방지)
             eventname: eventName,
             eventtype: eventType,
             eventrecurrencepattern: eventRecurrence,
             eventdescription: eventDescription,
             eventdefaultcapacity: eventCapacity
         });
+
         res.redirect('/events');
     } catch (err) {
-        console.error(err);
-        res.status(500).send("Error adding event.");
+        console.error("Error adding event:", err);
+        res.status(500).send("Error adding event: " + err.message);
     }
 });
 
@@ -220,6 +227,10 @@ app.post('/events/delete/:id', isLogged, isManager, async (req, res) => {
         res.status(500).send("Error deleting event. <br>This event might be linked to existing schedules or surveys.<br><a href='/events'>Go Back</a>");
     }
 });
+
+
+
+
 // 6. Milestones Maintenance
 app.get('/milestones', isLogged, async (req, res) => {
     const search = req.query.search || '';

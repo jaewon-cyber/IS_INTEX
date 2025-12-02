@@ -52,8 +52,13 @@
                         <tr>
                             <td class="p-3">
                                 <i class="bi bi-calendar3 me-2 text-muted"></i>
-                                <%= d.donationdate ? new Date(d.donationdate).toLocaleDateString() : 'N/A' %>
+                                <% if (d.donationdate) { %>
+                                    <%= new Date(d.donationdate).toLocaleDateString('en-US', { timeZone: 'UTC' }) %>
+                                <% } else { %>
+                                    <span class="text-muted small">No Date</span>
+                                <% } %>
                             </td>
+                
                             <td class="p-3 fw-bold text-success">
                                 $<%= parseFloat(d.donationamount).toLocaleString('en-US', { minimumFractionDigits: 2 }) %>
                             </td>

@@ -245,8 +245,12 @@ app.get('/milestones', isLogged, async (req, res) => {
 // --- SURVEYS ROUTES ---
 // --- SURVEYS ROUTES ---
 
-// 1. 설문조사 목록 (수정됨: eventdate -> eventdatetimestart as eventdate)
+// index.js
+
+// 설문조사 목록 (검색 기능 추가됨)
 app.get('/surveys', isLogged, async (req, res) => {
+    const search = req.query.search || ''; // 검색어 가져오기
+
     try {
         const surveys = await knex('participantsurveys')
             .join('participantinfo', 'participantsurveys.participantid', 'participantinfo.participantid')
@@ -258,12 +262,21 @@ app.get('/surveys', isLogged, async (req, res) => {
                 'participantinfo.participantfirstname',
                 'participantinfo.participantlastname',
                 'eventtemplates.eventname',
-                // ✅ 핵심 수정: 실제 DB 컬럼명(eventdatetimestart)을 eventdate라는 별명으로 가져옴
-                'eventoccurrences.eventdatetimestart as eventdate' 
+                'eventoccurrences.eventdatetimestart as eventdate'
             )
+            // ✅ 검색 로직 추가 (이름 또는 이벤트명)
+            .modify((queryBuilder) => {
+                if (search) {
+                    queryBuilder
+                        .where('participantinfo.participantfirstname', 'ilike', `%${search}%`)
+                        .orWhere('participantinfo.participantlastname', 'ilike', `%${search}%`)
+                        .orWhere('eventtemplates.eventname', 'ilike', `%${search}%`);
+                }
+            })
             .orderBy('participantsurveys.surveysubmissiondate', 'desc');
 
-        res.render('surveys', { title: 'Survey List', surveys });
+        // 뷰에 search 변수도 같이 전달 (검색창에 유지하기 위해)
+        res.render('surveys', { title: 'Survey List', surveys, search });
     } catch (err) {
         console.error("Survey List Error:", err);
         res.status(500).send("Error loading surveys.");

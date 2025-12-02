@@ -22,81 +22,12 @@ Navigation to donations(Users views and manager can maintain) 1 -->
     <main class="container mb-5 flex-grow-1">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <div class="text-center mb-4">
-                    <h2 class="fw-bold">Our Impact</h2>
-                    <p class="text-muted">See how our programs are making a long-term difference.</p>
-                </div>
-                
-                <div class="card shadow border-0 rounded-4 overflow-hidden">
-                    <div class="card-header custom-bg-blue text-white py-3">
-                        <h5 class="card-title mb-0 fw-bold text-center">Key Success Indicators</h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <canvas id="impactChart"></canvas>
-                    </div>
-                    <div class="card-footer bg-white text-center text-muted py-3">
-                        <small>Data updated based on post-event surveys and milestone tracking.</small>
-                    </div>
-                </div>
+               
             </div>
         </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script>
-        
-        const ctx = document.getElementById('impactChart');
-        
-        
-        const erPink = '#FFD8D1';
-        const erBlue = '#99B7C6';
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Graduation Rate', 'Job Placement', 'Artistic Confidence'],
-                datasets: [{
-                    label: 'Success Metrics (%)',
-                    data: [85, 72, 94],
-                    backgroundColor: [
-                        'rgba(255, 216, 209, 0.8)', // Pink with opacity
-                        'rgba(153, 183, 198, 0.8)', // Blue with opacity
-                        'rgba(255, 216, 209, 0.8)'  // Pink again
-                    ],
-                    borderColor: [
-                        erPink,
-                        erBlue,
-                        erPink
-                    ],
-                    borderWidth: 2,
-                    borderRadius: 5, 
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        display: false 
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        grid: {
-                            color: '#f0f0f0'
-                        }
-                    },
-                    x: {
-                         grid: {
-                            display: false 
-                        }
-                    }
-                }
-            }
-        });
-    </script>
 
 <%- include('partials/footer') %> ```

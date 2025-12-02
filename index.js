@@ -242,15 +242,64 @@ app.get('/milestones', isLogged, async (req, res) => {
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
-// 7. Post Surveys
+// --- SURVEYS ROUTES ---
+
+// 1. 설문조사 목록 (참여자, 이벤트명, 날짜 표시)
 app.get('/surveys', isLogged, async (req, res) => {
     try {
-        const surveys = await knex('surveyresponses')
+        const surveys = await knex('participantsurveys')
+            .join('participantinfo', 'participantsurveys.participantid', 'participantinfo.participantid')
+            .join('eventoccurrences', 'participantsurveys.eventoccurrenceid', 'eventoccurrences.eventoccurrenceid')
+            .join('eventtemplates', 'eventoccurrences.eventtemplateid', 'eventtemplates.eventtemplateid')
+            .select(
+                'participantsurveys.participantsurveyid',
+                'participantsurveys.surveysubmissiondate',
+                'participantinfo.participantfirstname',
+                'participantinfo.participantlastname',
+                'eventtemplates.eventname',
+                'eventoccurrences.eventdate'
+            )
+            .orderBy('participantsurveys.surveysubmissiondate', 'desc');
+
+        res.render('surveys', { title: 'Survey List', surveys });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error loading surveys.");
+    }
+});
+
+// 2. 설문조사 상세 보기 (질문과 답변 표시)
+app.get('/surveys/:id', isLogged, async (req, res) => {
+    const surveyId = req.params.id;
+
+    try {
+        // A. 설문 헤더 정보 (누가, 언제, 어떤 이벤트에 대해 썼는지)
+        const header = await knex('participantsurveys')
+            .join('participantinfo', 'participantsurveys.participantid', 'participantinfo.participantid')
+            .join('eventoccurrences', 'participantsurveys.eventoccurrenceid', 'eventoccurrences.eventoccurrenceid')
+            .join('eventtemplates', 'eventoccurrences.eventtemplateid', 'eventtemplates.eventtemplateid')
+            .select(
+                'participantinfo.participantfirstname',
+                'participantinfo.participantlastname',
+                'eventtemplates.eventname',
+                'eventoccurrences.eventdate'
+            )
+            .where('participantsurveys.participantsurveyid', surveyId)
+            .first();
+
+        // B. 상세 질문 및 답변 (Questions & Responses)
+        const details = await knex('surveyresponses')
             .join('surveyquestions', 'surveyresponses.questionid', 'surveyquestions.questionid')
-            .select('surveyresponses.*', 'surveyquestions.question')
-            .limit(50);
-        res.render('surveys', { title: 'Survey Results', surveys });
-    } catch (err) { console.error(err); res.send(err.message); }
+            .select('surveyquestions.question', 'surveyresponses.response')
+            .where('surveyresponses.participantsurveyid', surveyId)
+            .orderBy('surveyquestions.questionid');
+
+        res.render('surveyDetail', { title: 'Survey Details', header, details });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error loading survey details.");
+    }
 });
 
 // 8. Donations (Admin)

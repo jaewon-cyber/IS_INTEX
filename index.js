@@ -1,38 +1,44 @@
 require("dotenv").config();
 const express = require("express");
-const bodyParser = require("body-parser");
-const app = express();
 const path = require('path'); 
-app.use(express.static(path.join(__dirname, 'public')));
-app.set("view engine", "ejs");
-const port = process.env.PORT || 3000;
+const app = express();
 const session = require("express-session");
-const bcrypt = require('bcrypt'); // Make sure to require this at the top
 
+const port = process.env.PORT || 3000;
 
-// Session configuration
+// --- 1. MIDDLEWARE SETUP (Crucial for fixing req.body undefined error) ---
+// Parses HTML form data
+app.use(express.urlencoded({ extended: true })); 
+// Parses JSON data
+app.use(express.json());
+
+// Static files (CSS, Images)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// View Engine Setup
+app.set("view engine", "ejs");
+
+// --- 2. SESSION SETUP ---
 app.use(
-    session(
-        {
-    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
-    resave: false,
-    saveUninitialized: false,
-        }
-    )
+    session({
+        secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+        resave: false,
+        saveUninitialized: false,
+        // cookie: { secure: true } // Uncomment this line only if using HTTPS
+    })
 );
 
-
+// --- 3. DATABASE CONNECTION ---
 const knex = require("knex")({
-    client: "pg",
-    connection: {
-        host : process.env.DB_HOST || "localhost",
-        user : process.env.DB_USER || "postgres",
-        password : process.env.DB_PASSWORD || "admin",
-        database : process.env.DB_NAME || "ellarised",
-        port : process.env.DB_PORT || 5432,  
-        ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false 
-    
-    }
+  client: "pg",
+  connection: {
+      host : process.env.DB_HOST || "localhost",
+      user : process.env.DB_USER || "postgres",
+      password : process.env.DB_PASSWORD || "admin",
+      database : process.env.DB_NAME || "ellarises",
+      port : process.env.DB_PORT || 5432,  
+      ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false 
+  }
 });
 
 
@@ -53,27 +59,47 @@ app.get("/login", (req, res) => {
   res.render("login", { error: null });
 });
 
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
 
-  const user = await knex("users")
-    .where({ username, password })
-    .first();
 
-  if (!user) {
-    return res.render("login", { error: "Invalid login." });
-  }
-
-  req.session.user = user;
-  res.redirect("/");
+app.get('/login', (req, res) => {
+    if (req.session.user) {
+        return res.redirect('/');
+    }
+    res.render('login', { title: 'Login', error: null });
 });
 
-  // Render Login Page
-  app.get("/login", (req, res) => {
-      const error = req.session.error || null; 
-      req.session.error = null; 
-      res.render("login", { error: error });
-  });
+// Login Logic
+app.post('/login', async (req, res) => {
+    // Now req.body will work because of the middleware added above
+    const { email, password } = req.body; 
+
+    try {
+        const user = await knex('participantinfo') // Changed 'db' to 'knex' to match your variable name
+            .where({ ParticipantEmail: email }) 
+            .first();
+
+        if (user && user.ParticipantPassword === password) {
+            req.session.user = {
+                id: user.ParticipantEmail,
+                role: user.ParticipantRole
+            };
+            
+            req.session.save(() => {
+                if (user.ParticipantRole === 'admin') {
+                    res.redirect('/admin/donations');
+                } else {
+                    res.redirect('/');
+                }
+            });
+        } else {
+            res.render('login', { title: 'Login', error: 'Invalid email or password.' });
+        }
+    } catch (err) {
+        console.error('Login Error:', err);
+        res.render('login', { title: 'Login', error: 'Database error occurred.' });
+    }
+});
+
   
 // LOGOUT
 app.get("/logout", (req, res) => {
@@ -81,129 +107,129 @@ app.get("/logout", (req, res) => {
   res.redirect("/login");
 });
 
-//__________________________________________________________________________
-///// CREATE USER /////
-app.get("/createUser", requireLogin, (req, res) => {
-  res.render("createUser", { error: null });
-});
+// //__________________________________________________________________________
+// ///// CREATE USER /////
+// app.get("/createUser", requireLogin, (req, res) => {
+//   res.render("createUser", { error: null });
+// });
 
-app.post("/createUser/add")
+// app.post("/createUser/add")
 
 
-//__________________________________________________________________________
-///// USERS /////
-app.get("/users", requireLogin, (req, res) => {
-  res.render("users", { error: null });
-});
+// //__________________________________________________________________________
+// ///// USERS /////
+// app.get("/users", requireLogin, (req, res) => {
+//   res.render("users", { error: null });
+// });
 
-app.get("/users/display")
+// app.get("/users/display")
 
-//*MANAGER*//
-app.post("/user/add")
+// //*MANAGER*//
+// app.post("/user/add")
 
-app.post("/user/edit")
+// app.post("/user/edit")
 
-app.post("/user/delete")
+// app.post("/user/delete")
 
 
 ///// DONATIONS /////
 // 5. Donations
 // You had two files: donations.ejs (likely for public form) and viewDonations.ejs (admin view)
-app.get('/donate', (req, res) => {
-    res.render('donations', { title: 'Donate' });
-});
+// app.get('/donate', (req, res) => {
+//     res.render('donations', { title: 'Donate' });
+// });
 
-app.get('/admin/donations', (req, res) => {
-    res.render('viewDonations', { title: 'Donation Records' });
-});
+// app.get('/admin/donations', (req, res) => {
+//     res.render('viewDonations', { title: 'Donation Records' });
+// });
 
-app.post("/donations/addUser")
+// app.post("/donations/addUser")
 
-app.post("/donations/addDonation")
+// app.post("/donations/addDonation")
 
 //____________________________________________________________________
 ///// VIEW DONATIONS /////
-app.get("/viewDonations", requireLogin, (req, res) => {
-  res.render("viewDonations", { error: null });
-});
+// app.get("/viewDonations", requireLogin, (req, res) => {
+//   res.render("viewDonations", { error: null });
+// });
 
-app.get("/viewDonations/volunteers")
+// app.get("/viewDonations/volunteers")
 
 
-//*MANAGER*//
-app.post("/viewDonation/add")
+// //*MANAGER*//
+// app.post("/viewDonation/add")
 
-app.post("/viewDonation/edit")
+// app.post("/viewDonation/edit")
 
-app.post("/viewDonation/delete")
+// app.post("/viewDonation/delete")
 
 //_______________________________________________________________________
 ///// EVENTS //////
-app.get("/events", requireLogin, (req, res) => {
-  res.render("events", { error: null });
-});
+// app.get("/events", requireLogin, (req, res) => {
+//   res.render("events", { error: null });
+// });
 
-app.get("/events/display") // display all current event 
+// app.get("/events/display") // display all current event 
 
 
-//*MANAGER*//
-app.post("/event/add")
+// //*MANAGER*//
+// app.post("/event/add")
 
-app.post("/event/edit")
+// app.post("/event/edit")
 
-app.post("/event/delete")
+// app.post("/event/delete")
 
 //_________________________________________________________________________
 ///// MILESTONES /////
-app.get("/milestones", requireLogin, (req, res) => {
-  res.render("milestones", { error: null });
-});
+// app.get("/milestones", requireLogin, (req, res) => {
+//   res.render("milestones", { error: null });
+// });
 
-app.get("/milestones/display")
+// app.get("/milestones/display")
 
-//*MANAGER*//
-app.post("/milestone/add")
+// //*MANAGER*//
+// app.post("/milestone/add")
 
-app.post("/milestone/edit")
+// app.post("/milestone/edit")
 
-app.post("/milestone/delete")
+// app.post("/milestone/delete")
 
 
 //________________________________________________________________________
 ///// PARTICIPANTS /////
 // 4. Main Entities (CRUD)
-app.get('/participants', (req, res) => {
-    res.render('participants', { title: 'Participants' });
-});
+// app.get('/participants', (req, res) => {
+//     res.render('participants', { title: 'Participants' });
+// });
 
-//display all participants, search function
-app.get("/participants/display")
+// //display all participants, search function
+// app.get("/participants/display")
 
-//maintain milestones for participants 
-app.post("/participants/milestones")
+// //maintain milestones for participants 
+// app.post("/participants/milestones")
 
-//*MANAGER*//
-app.post("/participant/add")
+// //*MANAGER*//
+// app.post("/participant/add")
 
-app.post("/participant/edit")
+// app.post("/participant/edit")
 
-app.post("/participant/delete")
+// app.post("/participant/delete")
 
 
 //________________________________________________________________________
 ///// SURVEYS /////
-app.get("/surveys", requireLogin, (req, res) => {
-  res.render("surveys", { error: null });
-});
+// app.get("/surveys", requireLogin, (req, res) => {
+//   res.render("surveys", { error: null });
+// });
 
-app.get("/surveys/display")
+// app.get("/surveys/display")
 
-//*MANAGER*//
-app.post("/survey/add")
+// //*MANAGER*//
+// app.post("/survey/add")
 
-app.post("/survey/edit")
+// app.post("/survey/edit")
 
-app.post("/survey/delete")
+// app.post("/survey/delete")
 
 
 // START SERVER

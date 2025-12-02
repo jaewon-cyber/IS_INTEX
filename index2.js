@@ -1,34 +1,35 @@
-// this index2.js is test ejs file not main one.
-
-
-
 require("dotenv").config();
 const express = require("express");
-const bodyParser = require("body-parser");
-const app = express();
 const path = require('path'); 
-app.use(express.static(path.join(__dirname, 'public')));
-app.set("view engine", "ejs");
-const bcrypt = require('bcrypt'); // Make sure to require this at the top
-const port = process.env.PORT || 3000;
-
+const app = express();
+const bcrypt = require('bcrypt');
 const session = require("express-session");
 
-// Session configuration
+const port = process.env.PORT || 3000;
+
+// --- 1. MIDDLEWARE SETUP (Crucial for fixing req.body undefined error) ---
+// Parses HTML form data
+app.use(express.urlencoded({ extended: true })); 
+// Parses JSON data
+app.use(express.json());
+
+// Static files (CSS, Images)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// View Engine Setup
+app.set("view engine", "ejs");
+
+// --- 2. SESSION SETUP ---
 app.use(
-    session(
-        {
-    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
-    resave: false,
-    saveUninitialized: false,
-        }
-    )
+    session({
+        secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+        resave: false,
+        saveUninitialized: false,
+        // cookie: { secure: true } // Uncomment this line only if using HTTPS
+    })
 );
 
-
-
-
-
+// --- 3. DATABASE CONNECTION ---
 const knex = require("knex")({
   client: "pg",
   connection: {
@@ -38,9 +39,9 @@ const knex = require("knex")({
       database : process.env.DB_NAME || "ellarises",
       port : process.env.DB_PORT || 5432,  
       ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false 
-  
   }
 });
+
 
 // Authentication Middleware to protect routes
 const isAuthenticated = (req, res, next) => {

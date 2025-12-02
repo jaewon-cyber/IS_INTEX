@@ -524,10 +524,11 @@ app.get('/surveys/:id', isLogged, async (req, res) => {
 // index.js
 
 // 8-B. Donation Maintenance (Admin View - Records & Total)
+// index.js
+
 app.get('/admin/donations', isLogged, isManager, async (req, res) => {
     const search = req.query.search || '';
     try {
-        // 1. 개별 기부 내역 가져오기
         const donations = await knex('participantdonations')
             .join('participantinfo', 'participantdonations.participantid', 'participantinfo.participantid')
             .select(
@@ -542,13 +543,9 @@ app.get('/admin/donations', isLogged, isManager, async (req, res) => {
                            .orWhere('participantinfo.participantlastname', 'ilike', `%${search}%`);
                 }
             })
-            .orderBy('donationdate', 'desc');
-        // 🔴 [디버깅용 코드] 이 줄을 추가하세요!
-    // 가져온 데이터 중 첫 번째 데이터를 터미널에 출력합니다.
-        console.log("Check Donation Data:", donations[0]);
+            // ✅ 수정된 부분: 세 번째 인자로 'last'를 추가하여 NULL 값을 맨 뒤로 보냅니다.
+            .orderBy('donationdate', 'desc', 'last'); 
 
-        // 2. 총 기부금 계산 (Grand Total)
-        // participantdonations 테이블의 모든 donationamount를 더합니다.
         const sumResult = await knex('participantdonations').sum('donationamount as total');
         const grandTotal = sumResult[0].total || 0;
 
@@ -556,7 +553,7 @@ app.get('/admin/donations', isLogged, isManager, async (req, res) => {
             title: 'Donation Records', 
             donations, 
             search,
-            grandTotal // 뷰로 전달
+            grandTotal 
         });
 
     } catch (err) { 
@@ -564,7 +561,6 @@ app.get('/admin/donations', isLogged, isManager, async (req, res) => {
         res.status(500).send(err.message); 
     }
 });
-
 // 418 Teapot
 app.get('/teapot', (req, res) => {
     res.status(418).render('teapot', { title: '418' });

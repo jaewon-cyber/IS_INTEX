@@ -30,14 +30,11 @@
                         <li class="nav-item"><a class="nav-link" href="/milestones">Milestones</a></li>
 
                         <% if (locals.user.role === 'manager' || locals.user.role === 'admin') { %>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle fw-bold text-warning" href="#" role="button" data-bs-toggle="dropdown">
-                                    Admin
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="/users">User Maintenance</a></li>
-                                    <li><a class="dropdown-item" href="/admin/donations">Donation Records</a></li>
-                                </ul>
+                            <li class="nav-item ms-2 border-start ps-2">
+                                <a class="nav-link fw-bold text-warning" href="/admin/donations">Donation Records</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-white-50" href="/users" style="font-size: 0.9rem;">Users</a>
                             </li>
                         <% } %>
 
@@ -51,7 +48,7 @@
                     <% } %>
 
                     <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
-                        
+                         <a href="/donate" class="btn btn-custom-pink rounded-pill px-4 fw-bold">Donate</a>
                     </li>
                 </ul>
             </div>

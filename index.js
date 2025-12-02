@@ -521,22 +521,45 @@ app.get('/surveys/:id', isLogged, async (req, res) => {
         res.status(500).send("Error loading survey details.");
     }
 });
-// 8. Donations (Admin)
+// index.js
+
+// 8-B. Donation Maintenance (Admin View - Records & Total)
 app.get('/admin/donations', isLogged, isManager, async (req, res) => {
     const search = req.query.search || '';
     try {
+        // 1. 개별 기부 내역 가져오기
         const donations = await knex('participantdonations')
             .join('participantinfo', 'participantdonations.participantid', 'participantinfo.participantid')
-            .select('participantdonations.*', 'participantinfo.participantemail', 'participantinfo.participantfirstname')
+            .select(
+                'participantdonations.*', 
+                'participantinfo.participantemail', 
+                'participantinfo.participantfirstname',
+                'participantinfo.participantlastname'
+            )
+            .where(builder => {
+                if(search) {
+                    builder.where('participantinfo.participantfirstname', 'ilike', `%${search}%`)
+                           .orWhere('participantinfo.participantlastname', 'ilike', `%${search}%`);
+                }
+            })
             .orderBy('donationdate', 'desc');
 
-        res.render('viewDonations', { title: 'Donation Records', donations, search });
-    } catch (err) { console.error(err); res.send(err.message); }
-});
+        // 2. 총 기부금 계산 (Grand Total)
+        // participantdonations 테이블의 모든 donationamount를 더합니다.
+        const sumResult = await knex('participantdonations').sum('donationamount as total');
+        const grandTotal = sumResult[0].total || 0;
 
-// Donation Public Page
-app.get('/donate', (req, res) => {
-    res.render('donations', { title: 'Donate', user: req.session.user || null });
+        res.render('viewDonations', { 
+            title: 'Donation Records', 
+            donations, 
+            search,
+            grandTotal // 뷰로 전달
+        });
+
+    } catch (err) { 
+        console.error(err); 
+        res.status(500).send(err.message); 
+    }
 });
 
 // 418 Teapot

@@ -2,8 +2,8 @@
 
 <header class="custom-bg-pink py-5 text-center mb-4">
     <div class="container">
-        <h1 class="display-5 fw-bold text-dark">Participants</h1>
-        <p class="lead text-secondary">View and manage program attendees.</p>
+        <h1 class="display-5 fw-bold text-dark">Events</h1>
+        <p class="lead text-secondary">Manage workshops and mentoring sessions.</p>
     </div>
 </header>
 
@@ -11,15 +11,15 @@
     
     <div class="row mb-4 align-items-center">
         <div class="col-md-6">
-            <form action="/participants" method="GET" class="d-flex">
-                <input type="text" name="search" class="form-control me-2 rounded-pill" placeholder="Search by email..." value="<%= typeof search != 'undefined' ? search : '' %>">
+            <form action="/events" method="GET" class="d-flex">
+                <input type="text" name="search" class="form-control me-2 rounded-pill" placeholder="Search events..." value="<%= typeof search != 'undefined' ? search : '' %>">
                 <button type="submit" class="btn btn-outline-primary rounded-pill">Search</button>
             </form>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
             <% if (locals.user && (locals.user.role === 'manager' || locals.user.role === 'admin')) { %>
-                <a href="#" class="btn btn-custom-pink rounded-pill px-4 fw-bold">
-                    <i class="bi bi-person-plus-fill me-1"></i> Add New
+                <a href="/events/add" class="btn btn-custom-pink rounded-pill px-4 fw-bold">
+                    <i class="bi bi-calendar-plus me-1"></i> Add Event
                 </a>
             <% } %>
         </div>
@@ -30,26 +30,27 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light">
                     <tr>
-                        <th class="p-3">ID</th>
-                        <th class="p-3">Email</th>
-                        <th class="p-3">Name</th>
-                        <th class="p-3">Role</th>
+                        <th class="p-3">Event Name</th>
+                        <th class="p-3">Type</th>
+                        <th class="p-3">Recurrence</th>
+                        <th class="p-3">Description</th>
                         <th class="p-3">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% if (participants.length > 0) { %>
-                        <% participants.forEach(p => { %>
+                    <% if (events.length > 0) { %>
+                        <% events.forEach(e => { %>
                         <tr>
-                            <td class="p-3">#<%= p.ParticipantId %></td>
-                            <td class="p-3 fw-bold"><%= p.ParticipantEmail %></td>
-                            <td class="p-3"><%= p.ParticipantFirstName %> <%= p.ParticipantLastName %></td>
-                            <td class="p-3">
-                                <span class="badge bg-secondary"><%= p.ParticipantRole %></span>
-                            </td>
+                            <td class="p-3 fw-bold"><%= e.eventname %></td>
+                            <td class="p-3"><span class="badge bg-info text-dark"><%= e.eventtype %></span></td>
+                            <td class="p-3"><%= e.eventrecurrencepattern %></td>
+                            <td class="p-3 text-muted small"><%= e.eventdescription ? e.eventdescription.substring(0, 50) + '...' : '' %></td>
                             <td class="p-3">
                                 <% if (locals.user && (locals.user.role === 'manager' || locals.user.role === 'admin')) { %>
-                                    <form action="/participants/delete/<%= p.ParticipantId %>" method="POST" onsubmit="return confirm('Are you sure?');" style="display:inline;">
+                                    <a href="/events/edit/<%= e.eventtemplateid %>" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="/events/delete/<%= e.eventtemplateid %>" method="POST" onsubmit="return confirm('Delete this event?');" style="display:inline;">
                                         <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                     </form>
                                 <% } else { %>
@@ -59,9 +60,7 @@
                         </tr>
                         <% }) %>
                     <% } else { %>
-                        <tr>
-                            <td colspan="5" class="text-center p-5">No participants found.</td>
-                        </tr>
+                        <tr><td colspan="5" class="text-center p-4">No events found.</td></tr>
                     <% } %>
                 </tbody>
             </table>

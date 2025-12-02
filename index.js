@@ -138,6 +138,71 @@ app.get('/events', isLogged, async (req, res) => {
     } catch (err) { console.error(err); res.send(err.message); }
 });
 
+// --- EVENTS: ADD & EDIT ROUTES ---
+
+// 1. 이벤트 추가 페이지 보여주기 (GET)
+app.get('/events/add', isLogged, isManager, (req, res) => {
+    res.render('addEvent', { title: 'Add New Event' });
+});
+
+// 2. 이벤트 추가 로직 처리 (POST)
+app.post('/events/add', isLogged, isManager, async (req, res) => {
+    // HTML form의 name 속성과 일치해야 함
+    const { eventName, eventType, eventRecurrence, eventDescription, eventCapacity } = req.body;
+
+    try {
+        await knex('eventtemplates').insert({
+            eventname: eventName,
+            eventtype: eventType,
+            eventrecurrencepattern: eventRecurrence,
+            eventdescription: eventDescription,
+            eventdefaultcapacity: eventCapacity
+        });
+        res.redirect('/events');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error adding event.");
+    }
+});
+
+// 3. 이벤트 수정 페이지 보여주기 (GET)
+app.get('/events/edit/:id', isLogged, isManager, async (req, res) => {
+    const eventId = req.params.id;
+    try {
+        const event = await knex('eventtemplates').where({ eventtemplateid: eventId }).first();
+        if (event) {
+            res.render('editEvent', { title: 'Edit Event', event });
+        } else {
+            res.redirect('/events');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error loading event.");
+    }
+});
+
+// 4. 이벤트 수정 로직 처리 (POST)
+app.post('/events/edit/:id', isLogged, isManager, async (req, res) => {
+    const eventId = req.params.id;
+    const { eventName, eventType, eventRecurrence, eventDescription, eventCapacity } = req.body;
+
+    try {
+        await knex('eventtemplates')
+            .where({ eventtemplateid: eventId })
+            .update({
+                eventname: eventName,
+                eventtype: eventType,
+                eventrecurrencepattern: eventRecurrence,
+                eventdescription: eventDescription,
+                eventdefaultcapacity: eventCapacity
+            });
+        res.redirect('/events');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error updating event.");
+    }
+});
+
 // 6. Milestones Maintenance
 app.get('/milestones', isLogged, async (req, res) => {
     const search = req.query.search || '';

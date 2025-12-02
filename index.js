@@ -350,10 +350,122 @@ app.post('/events/delete/:id', isLogged, isManager, async (req, res) => {
 
 
 
-// ==========================================
-// --- MILESTONES ROUTES (전체 교체) ---
-// ==========================================
+// 1. My Profile Page (Info, Milestones, Donations)
+app.get('/profile', isLogged, async (req, res) => {
+    const email = req.session.user.id; // User email from session
 
+    try {
+        // A. Get Basic Info
+        const participant = await knex('participantinfo')
+            .where({ participantemail: email })
+            .first();
+
+        if (!participant) return res.redirect('/logout');
+
+        // B. Get My Milestones
+        const myMilestones = await knex('participantmilestones')
+            .join('milestones', 'participantmilestones.milestoneid', 'milestones.milestoneid')
+            .select('milestones.milestonetitle', 'participantmilestones.milestonedate')
+            .where({ participantid: participant.participantid })
+            .orderBy('participantmilestones.milestonedate', 'desc');
+
+        // C. Get My Donations
+        const myDonations = await knex('participantdonations')
+            .where({ participantid: participant.participantid })
+            .orderBy('donationdate', 'desc');
+
+        res.render('profile', { 
+            title: 'My Profile', 
+            participant, 
+            myMilestones, 
+            myDonations 
+        });
+
+    } catch (err) {
+        console.error("Profile Error:", err);
+        res.status(500).send("Error loading profile.");
+    }
+});
+
+// 2. Update My Profile (POST)
+app.post('/profile/edit', isLogged, async (req, res) => {
+    const email = req.session.user.id;
+    const { firstName, lastName, phone, city, state, zip, password } = req.body;
+
+    try {
+        // Prepare update object
+        const updateData = {
+            participantfirstname: firstName,
+            participantlastname: lastName,
+            participantphone: phone,
+            participantcity: city,
+            participantstate: state,
+            participantzip: zip
+        };
+
+        // Update password only if provided
+        if (password && password.trim() !== "") {
+            updateData.participantpassword = password;
+        }
+
+        await knex('participantinfo')
+            .where({ participantemail: email })
+            .update(updateData);
+
+        res.redirect('/profile');
+    } catch (err) {
+        console.error("Profile Update Error:", err);
+        res.status(500).send("Error updating profile.");
+    }
+});
+
+// 3. Register for an Event (POST)
+app.post('/events/register/:templateId', isLogged, async (req, res) => {
+    const templateId = req.params.templateId;
+    const email = req.session.user.id;
+
+    try {
+        // A. Get Participant ID
+        const participant = await knex('participantinfo').where({ participantemail: email }).first();
+
+        // B. Find an active Occurrence for this Template (Simplification: Find the latest one)
+        // In a real app, you would select a specific date. Here we auto-assign to the latest occurrence.
+        const occurrence = await knex('eventoccurrences')
+            .where({ eventtemplateid: templateId })
+            .orderBy('eventdatetimestart', 'desc')
+            .first();
+
+        if (!occurrence) {
+            return res.send("<script>alert('No upcoming dates for this event.'); window.location.href='/events';</script>");
+        }
+
+        // C. Check if already registered
+        const existing = await knex('participantregistrations')
+            .where({ 
+                participantid: participant.participantid,
+                eventoccurrenceid: occurrence.eventoccurrenceid 
+            })
+            .first();
+
+        if (existing) {
+            return res.send("<script>alert('You are already registered for this event!'); window.location.href='/events';</script>");
+        }
+
+        // D. Create Registration
+        await knex('participantregistrations').insert({
+            participantid: participant.participantid,
+            eventoccurrenceid: occurrence.eventoccurrenceid,
+            registrationcreatedat: new Date(), // Current Timestamp
+            registrationstatus: 'Registered'
+        });
+
+        res.send("<script>alert('Successfully registered!'); window.location.href='/events';</script>");
+
+    } catch (err) {
+        console.error("Registration Error:", err);
+        res.status(500).send("Error registering for event.");
+    }
+});
 // 1. 마일스톤 목록 조회
 app.get('/milestones', isLogged, async (req, res) => {
     const search = req.query.search || '';

@@ -45,23 +45,34 @@
                             <td class="p-3"><span class="badge bg-info text-dark"><%= e.eventtype %></span></td>
                             <td class="p-3"><%= e.eventrecurrencepattern %></td>
                             <td class="p-3 text-muted small"><%= e.eventdescription ? e.eventdescription.substring(0, 50) + '...' : '' %></td>
-                            <td class="p-3">
-                                <% if (locals.user && (locals.user.role === 'manager' || locals.user.role === 'admin')) { %>
-                                    <a href="/events/edit/<%= e.eventtemplateid %>" class="btn btn-sm btn-outline-primary me-1">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form action="/events/delete/<%= e.eventtemplateid %>" method="POST" onsubmit="return confirm('Delete this event?');" style="display:inline;">
-                                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                    </form>
+                            
+                            <td class="p-3 text-end">
+                                <% if (locals.user) { %>
+                                    
+                                    <% if (locals.user.role === 'manager' || locals.user.role === 'admin') { %>
+                                        <form action="/events/delete/<%= e.eventtemplateid %>" method="POST" onsubmit="return confirm('Delete this event?');" style="display:inline;">
+                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                        <a href="/events/edit/<%= e.eventtemplateid %>" class="btn btn-sm btn-outline-primary ms-1">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    
+                                    <% } else { %>
+                                        <form action="/events/register/<%= e.eventtemplateid %>" method="POST" onsubmit="return confirm('Register for <%= e.eventname %>?');" style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                                                Register
+                                            </button>
+                                        </form>
+                                    <% } %>
+                
                                 <% } else { %>
-                                    <span class="text-muted small">View Only</span>
+                                    <a href="/login" class="btn btn-sm btn-outline-secondary rounded-pill" style="font-size: 0.8rem;">Login to Join</a>
                                 <% } %>
                             </td>
-                        </tr>
+                            </tr>
                         <% }) %>
                     <% } else { %>
-                        <tr><td colspan="5" class="text-center p-4">No events found.</td></tr>
-                    <% } %>
+                        <% } %>
                 </tbody>
             </table>
         </div>

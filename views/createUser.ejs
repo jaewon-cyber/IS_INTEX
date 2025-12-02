@@ -1,67 +1,54 @@
-<!-- ... -->
-<%- include('partials/header') %>  <header class="custom-bg-pink py-5 text-center mb-4"></header>
+<%- include('partials/header') %>
 
-    <main class="container d-flex justify-content-center align-items-center flex-grow-1 my-5">
-        <div class="card shadow border-0 rounded-4 p-4" style="max-width: 500px; width: 100%;">
+<main class="container d-flex justify-content-center align-items-center my-5" style="min-height: 60vh;">
+    <div class="card shadow-lg border-0 rounded-4" style="max-width: 500px; width: 100%;">
+        <div class="card-body p-5">
             
             <div class="text-center mb-4">
-                <div class="bg-light rounded-circle d-inline-flex p-3 mb-3">
-                    <i class="bi bi-person-plus-fill text-blue fs-1"></i>
-                </div>
-                <h2 class="fw-bold text-dark">Create New User</h2>
-                
+                <h2 class="fw-bold text-dark">Create Account</h2>
+                <p class="text-muted">Join the Ella Rises community.</p>
             </div>
 
             <form action="/createUser" method="POST">
                 
-                <div class="mb-3">
-                    <label for="username" class="form-label fw-bold text-secondary small">Enter Email</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="example@gmail.com" required>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-bold small text-muted">First Name</label>
+                        <input type="text" name="firstName" class="form-control rounded-pill" required autofocus>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-bold small text-muted">Last Name</label>
+                        <input type="text" name="lastName" class="form-control rounded-pill" required>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label for="password" class="form-label fw-bold text-secondary small">Password</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Create a strong password" required>
-                    </div>
+                    <label class="form-label fw-bold small text-muted">Email</label>
+                    <input type="email" name="email" class="form-control rounded-pill" placeholder="name@example.com" required>
                 </div>
 
                 <div class="mb-3">
-                    <label for="confirmPassword" class="form-label fw-bold text-secondary small">Confirm Password</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-check2-circle"></i></span>
-                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="Re-enter password" required>
-                    </div>
+                    <label class="form-label fw-bold small text-muted">Password</label>
+                    <input type="password" name="password" class="form-control rounded-pill" required>
                 </div>
 
                 <div class="mb-4">
-                    <label for="role" class="form-label fw-bold text-secondary small">User Role</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-shield-lock"></i></span>
-                        <select class="form-select" id="role" name="role">
-                            <option value="user" selected>Common User (View Only)</option>
-                            <option value="manager">Manager (Edit Access)</option>
-                            <option value="admin">Administrator (Full Access)</option>
-                        </select>
-                    </div>
-                    <div class="form-text ms-1">Managers can edit data; Common Users can only view.</div>
+                    <label class="form-label fw-bold small text-muted">Role</label>
+                    <select name="role" class="form-select rounded-pill">
+                        <option value="participant" selected>Participant</option>
+                        <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                    </select>
                 </div>
 
                 <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-custom-pink fw-bold py-2 rounded-pill shadow-sm">
-                        Create Account
-                    </button>
-                    <a href="/login" class="btn btn-outline-secondary fw-bold py-2 rounded-pill border-0">
-                        Cancel
-                    </a>
+                    <button type="submit" class="btn btn-custom-pink rounded-pill fw-bold py-2 shadow-sm">Sign Up</button>
+                    <a href="/login" class="btn btn-outline-secondary rounded-pill fw-bold py-2">Back to Login</a>
                 </div>
 
             </form>
         </div>
-    </main>
+    </div>
+</main>
 
-    <%- include('partials/footer') %> ```
+<%- include('partials/footer') %>

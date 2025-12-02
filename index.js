@@ -93,6 +93,41 @@ app.get('/logout', (req, res) => {
     req.session.destroy(() => res.redirect('/'));
 });
 
+// ==========================================
+// --- SIGN UP ROUTES (Create User) ---
+// ==========================================
+
+// 1. 회원가입 페이지 보여주기 (GET)
+app.get('/createUser', (req, res) => {
+    res.render('createUser', { title: 'Create Account' });
+});
+
+// 2. 회원가입 로직 처리 (POST)
+app.post('/createUser', async (req, res) => {
+    const { firstName, lastName, email, password, role } = req.body;
+
+    try {
+        // ID 자동 생성 (가장 큰 번호 + 1)
+        const maxIdResult = await knex('participantinfo').max('participantid as maxId').first();
+        const nextId = (maxIdResult.maxId || 0) + 1;
+
+        await knex('participantinfo').insert({
+            participantid: nextId,
+            participantfirstname: firstName,
+            participantlastname: lastName,
+            participantemail: email,
+            participantpassword: password,
+            participantrole: role || 'participant' // 기본값은 참여자
+        });
+
+        // 가입 성공 시 로그인 페이지로 이동
+        res.send("<script>alert('Account created successfully! Please login.'); window.location.href='/login';</script>");
+        
+    } catch (err) {
+        console.error("Create User Error:", err);
+        res.status(500).send("Error creating account: " + err.message);
+    }
+});
 // 3. User Maintenance
 app.get('/users', isLogged, isManager, async (req, res) => {
     const search = req.query.search || '';

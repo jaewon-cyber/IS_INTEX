@@ -104,27 +104,133 @@ app.get('/users', isLogged, isManager, async (req, res) => {
         res.render('users', { title: 'User Maintenance', users, search });
     } catch (err) { console.error(err); res.send(err.message); }
 });
+// ==========================================
+// --- PARTICIPANTS ROUTES (전체 교체) ---
+// ==========================================
 
-// 4. Participants Maintenance
+// 1. 참가자 목록 조회 (검색 기능 포함)
 app.get('/participants', isLogged, async (req, res) => {
     const search = req.query.search || '';
     try {
         const participants = await knex('participantinfo')
             .where(builder => {
-                if(search) builder.where('participantemail', 'ilike', `%${search}%`);
+                if (search) {
+                    builder.where('participantfirstname', 'ilike', `%${search}%`)
+                        .orWhere('participantlastname', 'ilike', `%${search}%`)
+                        .orWhere('participantemail', 'ilike', `%${search}%`);
+                }
             })
-            .orderBy('participantid');
+            .orderBy('participantid', 'asc');
 
         res.render('participants', { title: 'Participants', participants, search });
-    } catch (err) { console.error(err); res.send(err.message); }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error loading participants.");
+    }
 });
 
+// ✅ 2. 참가자 상세 보기 (View) - 이 부분이 없어서 에러가 난 것임!
+app.get('/participants/view/:id', isLogged, async (req, res) => {
+    try {
+        const participant = await knex('participantinfo')
+            .where({ participantid: req.params.id })
+            .first();
+
+        if (participant) {
+            res.render('participantDetail', { title: 'Participant Details', participant });
+        } else {
+            res.status(404).send("Participant not found.");
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error loading participant details.");
+    }
+});
+
+// ✅ 3. 참가자 추가 페이지 (GET) - 이 부분이 없어서 에러가 난 것임!
+app.get('/participants/add', isLogged, isManager, (req, res) => {
+    res.render('addParticipant', { title: 'Add New Participant' });
+});
+
+// 4. 참가자 추가 로직 (POST)
+app.post('/participants/add', isLogged, isManager, async (req, res) => {
+    const { email, password, firstName, lastName, role, phone, city, state, zip } = req.body;
+    try {
+        // ID 자동 생성 (Max + 1)
+        const maxIdResult = await knex('participantinfo').max('participantid as maxId').first();
+        const nextId = (maxIdResult.maxId || 0) + 1;
+
+        await knex('participantinfo').insert({
+            participantid: nextId,
+            participantemail: email,
+            participantpassword: password, 
+            participantfirstname: firstName,
+            participantlastname: lastName,
+            participantrole: role,
+            participantphone: phone,
+            participantcity: city,
+            participantstate: state,
+            participantzip: zip
+        });
+        res.redirect('/participants');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error adding participant.");
+    }
+});
+
+// ✅ 5. 참가자 수정 페이지 (GET) - 이 부분이 없어서 에러가 난 것임!
+app.get('/participants/edit/:id', isLogged, isManager, async (req, res) => {
+    try {
+        const participant = await knex('participantinfo')
+            .where({ participantid: req.params.id })
+            .first();
+
+        if (participant) {
+            res.render('editParticipant', { title: 'Edit Participant', participant });
+        } else {
+            res.redirect('/participants');
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error loading participant for edit.");
+    }
+});
+
+// 6. 참가자 수정 로직 (POST)
+app.post('/participants/edit/:id', isLogged, isManager, async (req, res) => {
+    const { email, firstName, lastName, role, phone, city, state, zip } = req.body;
+    try {
+        await knex('participantinfo')
+            .where({ participantid: req.params.id })
+            .update({
+                participantemail: email,
+                participantfirstname: firstName,
+                participantlastname: lastName,
+                participantrole: role,
+                participantphone: phone,
+                participantcity: city,
+                participantstate: state,
+                participantzip: zip
+            });
+        res.redirect('/participants');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error updating participant.");
+    }
+});
+
+// 7. 참가자 삭제 로직 (POST)
 app.post('/participants/delete/:id', isLogged, isManager, async (req, res) => {
     try {
         await knex('participantinfo').where({ participantid: req.params.id }).del();
         res.redirect('/participants');
-    } catch (err) { console.error(err); res.send("Error deleting participant."); }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send("Error deleting participant.<br>Check for related records.");
+    }
 });
+
 
 // 5. Events Maintenance
 app.get('/events', isLogged, async (req, res) => {

@@ -1,3 +1,7 @@
+// this index2.js is test ejs file not main one.
+
+
+
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");

@@ -101,40 +101,31 @@ app.get('/teapot', (req, res) => {
   res.status(418);
   res.render('teapot', { title: '418 I\'m a Teapot' });
 });
-// 1. 로그인 페이지 보여주기 (GET)
-app.get('/login', (req, res) => {
-  
-  if (req.session.user) {
-      return res.redirect('/');
-  }
-  
-  res.render('login', { title: 'Login', error: null });
-});
-
 
 app.post('/login', async (req, res) => {
+  
   const { email, password } = req.body; 
 
   try {
       
-      const user = await db('participantinfo').where({ Email: email }).first();
+      const user = await db('participantinfo')
+          .where({ ParticipantEmail: email }) 
+          .first();
 
-      
-      if (user && user.Password === password) {
+      if (user && user.ParticipantPassword === password) {
           
-          장
+          // 4. 로그인 성공! 세션에 정보 저장
           req.session.user = {
-              email: user.Email,
-              role: user.ParticipantRole // 'admin'인지 'participant'인지 구분
+              id: user.ParticipantEmail,     
+              role: user.ParticipantRole    
           };
 
-         
+          // 5. 역할(Role)에 따른 페이지 이동
           req.session.save(() => {
-              
               if (user.ParticipantRole === 'admin') {
-                  res.redirect('/admin/donations');
+                  res.redirect('/admin/donations'); 
               } else {
-                  res.redirect('/');
+                  res.redirect('/'); 
               }
           });
 
@@ -147,24 +138,13 @@ app.post('/login', async (req, res) => {
       }
 
   } catch (err) {
-      console.error('Login Process Error:', err);
+      console.error('Login Error:', err);
       res.render('login', { 
           title: 'Login', 
-          error: 'A database error occurred.' 
+          error: 'Database error occurred.' 
       });
   }
 });
-
-// 3. logout
-app.get('/logout', (req, res) => {
-  req.session.destroy((err) => {
-      if (err) {
-          console.log(err);
-      }
-      res.redirect('/'); 
-  });
-});
-
 // 3. Logout
 app.get('/logout', (req, res) => {
   req.session.destroy((err) => {

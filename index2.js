@@ -9,6 +9,7 @@ const app = express();
 const path = require('path'); 
 app.use(express.static(path.join(__dirname, 'public')));
 app.set("view engine", "ejs");
+const bcrypt = require('bcrypt'); // Make sure to require this at the top
 const port = process.env.PORT || 3000;
 
 const session = require("express-session");
@@ -29,16 +30,16 @@ app.use(
 
 
 const knex = require("knex")({
-    client: "pg",
-    connection: {
-        host : process.env.DB_HOST || "localhost",
-        user : process.env.DB_USER || "postgres",
-        password : process.env.DB_PASSWORD || "admin",
-        database : process.env.DB_NAME || "studygroup",
-        port : process.env.DB_PORT || 5432,  // PostgreSQL 16 typically uses port 5434
-        ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false 
-    
-    }
+  client: "pg",
+  connection: {
+      host : process.env.DB_HOST || "localhost",
+      user : process.env.DB_USER || "postgres",
+      password : process.env.DB_PASSWORD || "admin",
+      database : process.env.DB_NAME || "ellarised",
+      port : process.env.DB_PORT || 5432,  
+      ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false 
+  
+  }
 });
 
 // Authentication Middleware to protect routes
@@ -97,57 +98,84 @@ app.get("/", async (req, res) => {
   
 // IS 404 Requirement: HTTP 418 Status Code
 app.get('/teapot', (req, res) => {
-  res.status(418); // ✅ 핵심: 상태 코드를 418로 설정
+  res.status(418);
   res.render('teapot', { title: '418 I\'m a Teapot' });
 });
+// 1. 로그인 페이지 보여주기 (GET)
+app.get('/login', (req, res) => {
+  
+  if (req.session.user) {
+      return res.redirect('/');
+  }
+  
+  res.render('login', { title: 'Login', error: null });
+});
 
-  
-  // Render Login Page
-  app.get("/login", (req, res) => {
-      const error = req.session.error || null; 
-      req.session.error = null; 
-      res.render("login", { error: error });
-  });
-  
-  //  Handle Login Attempt
-  app.post("/login", async (req, res) => {
-      const { username, password } = req.body;
-  
-      try {
-          const user = await knex('credentials')
-              .where({
-                  username: username,
-                  password: password
-              })
-              .select('student_id', 'username')
-              .first(); 
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body; 
+
+  try {
+      
+      const user = await db('participantinfo').where({ Email: email }).first();
+
+      
+      if (user && user.Password === password) {
           
-          if (user) {
-              req.session.userId = user.student_id;   
-              req.session.username = user.username; 
-              
-              
-              req.session.save(() => {
-                  res.redirect("/"); 
-              });
-          } else {
-              
-              req.session.error = "Invalid username or password.";
-              
-              
-              req.session.save(() => {
-                  res.redirect("/login");
-              });
-          }
-      } catch (err) {
-          console.error("Login Error:", err);
-          req.session.error = "An unexpected error occurred during login.";
+          장
+          req.session.user = {
+              email: user.Email,
+              role: user.ParticipantRole // 'admin'인지 'participant'인지 구분
+          };
+
+         
           req.session.save(() => {
-              res.redirect("/login");
+              
+              if (user.ParticipantRole === 'admin') {
+                  res.redirect('/admin/donations');
+              } else {
+                  res.redirect('/');
+              }
+          });
+
+      } else {
+          
+          res.render('login', { 
+              title: 'Login', 
+              error: 'Invalid email or password.' 
           });
       }
+
+  } catch (err) {
+      console.error('Login Process Error:', err);
+      res.render('login', { 
+          title: 'Login', 
+          error: 'A database error occurred.' 
+      });
+  }
+});
+
+// 3. logout
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+      if (err) {
+          console.log(err);
+      }
+      res.redirect('/'); 
   });
-  
+});
+
+// 3. Logout
+app.get('/logout', (req, res) => {
+  req.session.destroy((err) => {
+      if (err) {
+          return res.redirect('/');
+      }
+      res.clearCookie('connect.sid');
+      res.redirect('/');
+  });
+});
+
   // Display Users Page (Requires Authentication)
   // test
   app.get("/displayUsers", isAuthenticated, async (req, res) => {

@@ -7,7 +7,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set("view engine", "ejs");
 const port = process.env.PORT || 3000;
 const session = require("express-session");
-
+const bcrypt = require('bcrypt'); // Make sure to require this at the top
 
 
 // Session configuration
@@ -20,6 +20,21 @@ app.use(
         }
     )
 );
+
+
+const knex = require("knex")({
+    client: "pg",
+    connection: {
+        host : process.env.DB_HOST || "localhost",
+        user : process.env.DB_USER || "postgres",
+        password : process.env.DB_PASSWORD || "admin",
+        database : process.env.DB_NAME || "ellarised",
+        port : process.env.DB_PORT || 5432,  
+        ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false 
+    
+    }
+});
+
 
 function requireLogin(req, res, next) {
   if (!req.session.user) return res.redirect("/login");

@@ -243,8 +243,9 @@ app.get('/milestones', isLogged, async (req, res) => {
 });
 
 // --- SURVEYS ROUTES ---
+// --- SURVEYS ROUTES ---
 
-// 1. 설문조사 목록 (참여자, 이벤트명, 날짜 표시)
+// 1. 설문조사 목록 (수정됨: eventdate -> eventdatetimestart as eventdate)
 app.get('/surveys', isLogged, async (req, res) => {
     try {
         const surveys = await knex('participantsurveys')
@@ -257,23 +258,24 @@ app.get('/surveys', isLogged, async (req, res) => {
                 'participantinfo.participantfirstname',
                 'participantinfo.participantlastname',
                 'eventtemplates.eventname',
-                'eventoccurrences.eventdate'
+                // ✅ 핵심 수정: 실제 DB 컬럼명(eventdatetimestart)을 eventdate라는 별명으로 가져옴
+                'eventoccurrences.eventdatetimestart as eventdate' 
             )
             .orderBy('participantsurveys.surveysubmissiondate', 'desc');
 
         res.render('surveys', { title: 'Survey List', surveys });
     } catch (err) {
-        console.error(err);
+        console.error("Survey List Error:", err);
         res.status(500).send("Error loading surveys.");
     }
 });
 
-// 2. 설문조사 상세 보기 (질문과 답변 표시)
+// 2. 설문조사 상세 보기 (수정됨: eventdate -> eventdatetimestart as eventdate)
 app.get('/surveys/:id', isLogged, async (req, res) => {
     const surveyId = req.params.id;
 
     try {
-        // A. 설문 헤더 정보 (누가, 언제, 어떤 이벤트에 대해 썼는지)
+        // A. 설문 헤더 정보
         const header = await knex('participantsurveys')
             .join('participantinfo', 'participantsurveys.participantid', 'participantinfo.participantid')
             .join('eventoccurrences', 'participantsurveys.eventoccurrenceid', 'eventoccurrences.eventoccurrenceid')
@@ -282,12 +284,13 @@ app.get('/surveys/:id', isLogged, async (req, res) => {
                 'participantinfo.participantfirstname',
                 'participantinfo.participantlastname',
                 'eventtemplates.eventname',
-                'eventoccurrences.eventdate'
+                // ✅ 핵심 수정: 여기도 동일하게 변경
+                'eventoccurrences.eventdatetimestart as eventdate'
             )
             .where('participantsurveys.participantsurveyid', surveyId)
             .first();
 
-        // B. 상세 질문 및 답변 (Questions & Responses)
+        // B. 상세 질문 및 답변
         const details = await knex('surveyresponses')
             .join('surveyquestions', 'surveyresponses.questionid', 'surveyquestions.questionid')
             .select('surveyquestions.question', 'surveyresponses.response')
@@ -297,11 +300,10 @@ app.get('/surveys/:id', isLogged, async (req, res) => {
         res.render('surveyDetail', { title: 'Survey Details', header, details });
 
     } catch (err) {
-        console.error(err);
+        console.error("Survey Detail Error:", err);
         res.status(500).send("Error loading survey details.");
     }
 });
-
 // 8. Donations (Admin)
 app.get('/admin/donations', isLogged, isManager, async (req, res) => {
     const search = req.query.search || '';

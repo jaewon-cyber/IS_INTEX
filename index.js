@@ -54,13 +54,6 @@ app.get('/teapot', (req, res) => {
 
 
 
-///// LOGIN /////
-app.get("/login", (req, res) => {
-  res.render("login", { error: null });
-});
-
-
-
 app.get('/login', (req, res) => {
     if (req.session.user) {
         return res.redirect('/');
@@ -75,17 +68,17 @@ app.post('/login', async (req, res) => {
 
     try {
         const user = await knex('participantinfo') // Changed 'db' to 'knex' to match your variable name
-            .where({ ParticipantEmail: email }) 
+            .where({ participantemail: email }) 
             .first();
 
-        if (user && user.ParticipantPassword === password) {
+        if (user && user.Participantpassword === password) {
             req.session.user = {
-                id: user.ParticipantEmail,
-                role: user.ParticipantRole
+                id: user.participantEmail,
+                role: user.participantRole
             };
             
             req.session.save(() => {
-                if (user.ParticipantRole === 'admin') {
+                if (user.participantrole === 'admin') {
                     res.redirect('/admin/donations');
                 } else {
                     res.redirect('/');
@@ -107,133 +100,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/login");
 });
 
-// //__________________________________________________________________________
-// ///// CREATE USER /////
-// app.get("/createUser", requireLogin, (req, res) => {
-//   res.render("createUser", { error: null });
-// });
 
-// app.post("/createUser/add")
-
-
-// //__________________________________________________________________________
-// ///// USERS /////
-// app.get("/users", requireLogin, (req, res) => {
-//   res.render("users", { error: null });
-// });
-
-// app.get("/users/display")
-
-// //*MANAGER*//
-// app.post("/user/add")
-
-// app.post("/user/edit")
-
-// app.post("/user/delete")
-
-
-///// DONATIONS /////
-// 5. Donations
-// You had two files: donations.ejs (likely for public form) and viewDonations.ejs (admin view)
-// app.get('/donate', (req, res) => {
-//     res.render('donations', { title: 'Donate' });
-// });
-
-// app.get('/admin/donations', (req, res) => {
-//     res.render('viewDonations', { title: 'Donation Records' });
-// });
-
-// app.post("/donations/addUser")
-
-// app.post("/donations/addDonation")
-
-//____________________________________________________________________
-///// VIEW DONATIONS /////
-// app.get("/viewDonations", requireLogin, (req, res) => {
-//   res.render("viewDonations", { error: null });
-// });
-
-// app.get("/viewDonations/volunteers")
-
-
-// //*MANAGER*//
-// app.post("/viewDonation/add")
-
-// app.post("/viewDonation/edit")
-
-// app.post("/viewDonation/delete")
-
-//_______________________________________________________________________
-///// EVENTS //////
-// app.get("/events", requireLogin, (req, res) => {
-//   res.render("events", { error: null });
-// });
-
-// app.get("/events/display") // display all current event 
-
-
-// //*MANAGER*//
-// app.post("/event/add")
-
-// app.post("/event/edit")
-
-// app.post("/event/delete")
-
-//_________________________________________________________________________
-///// MILESTONES /////
-// app.get("/milestones", requireLogin, (req, res) => {
-//   res.render("milestones", { error: null });
-// });
-
-// app.get("/milestones/display")
-
-// //*MANAGER*//
-// app.post("/milestone/add")
-
-// app.post("/milestone/edit")
-
-// app.post("/milestone/delete")
-
-
-//________________________________________________________________________
-///// PARTICIPANTS /////
-// 4. Main Entities (CRUD)
-// app.get('/participants', (req, res) => {
-//     res.render('participants', { title: 'Participants' });
-// });
-
-// //display all participants, search function
-// app.get("/participants/display")
-
-// //maintain milestones for participants 
-// app.post("/participants/milestones")
-
-// //*MANAGER*//
-// app.post("/participant/add")
-
-// app.post("/participant/edit")
-
-// app.post("/participant/delete")
-
-
-//________________________________________________________________________
-///// SURVEYS /////
-// app.get("/surveys", requireLogin, (req, res) => {
-//   res.render("surveys", { error: null });
-// });
-
-// app.get("/surveys/display")
-
-// //*MANAGER*//
-// app.post("/survey/add")
-
-// app.post("/survey/edit")
-
-// app.post("/survey/delete")
-
-
-// START SERVER
-// Launch the Express server on the specified port (default: 3000)
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server running on port ${process.env.PORT || 3000}`);
 });

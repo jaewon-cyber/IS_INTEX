@@ -95,7 +95,12 @@ app.get("/", async (req, res) => {
   });
   
   
-  
+// IS 404 Requirement: HTTP 418 Status Code
+app.get('/teapot', (req, res) => {
+  res.status(418); // ✅ 핵심: 상태 코드를 418로 설정
+  res.render('teapot', { title: '418 I\'m a Teapot' });
+});
+
   
   // Render Login Page
   app.get("/login", (req, res) => {

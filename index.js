@@ -101,6 +101,46 @@ app.get("/logout", (req, res) => {
 });
 
 
+// Dashboard Page
+app.get("/", async (req, res) => {
+    try {
+      let firstName = "Student";
+      let isStudentUser = false;
+  
+      if (req.session.userId) {
+        const student = await knex("students")
+          .where("student_id", req.session.userId)
+          .first();
+  
+        if (student) {
+          firstName = student.stud_first_name;
+        } else if (req.session.username) {
+          firstName = req.session.username;
+        }
+      }
+  
+      // Compare the displayed firstName to "Student" (case-insensitive)
+      if (firstName.toLowerCase() === "student") {
+        isStudentUser = true;
+      }
+  
+      res.render("index", {
+        firstName,
+        isStudentUser,
+        userId: req.session.userId
+      });
+  
+    } catch (err) {
+      console.error("Dashboard Error:", err);
+  
+      res.render("index", {
+        firstName: "Student",
+        isStudentUser: true // fallback: treat default "Student" as the placeholder user
+      });
+    }
+  });
+  
+
 app.listen(process.env.PORT || 3000, () => {
   console.log(`Server running on port ${process.env.PORT || 3000}`);
 });

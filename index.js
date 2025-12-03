@@ -26,11 +26,11 @@ app.use(
 const knex = require("knex")({
     client: "pg",
     connection: {
-        host: process.env.DB_HOST || "localhost",
-        user: process.env.DB_USER || "postgres",
-        password: process.env.DB_PASSWORD || "admin",
-        database: process.env.DB_NAME || "ellarises",
-        port: process.env.DB_PORT || 5432,
+        host: process.env.RDS_HOSTNAME || process.env.DB_HOST || "localhost",
+        user: process.env.RDS_USERNAME || process.env.DB_USER || "postgres",
+        password: process.env.RDS_PASSWORD || process.env.DB_PASSWORD || "admin",
+        database: process.env.RDS_DB_NAME || process.env.DB_NAME || "ellarises",
+        port: process.env.RDS_PORT || process.env.DB_PORT || 5432,
         ssl: process.env.DB_SSL ? { rejectUnauthorized: false } : false
     }
 });
@@ -715,4 +715,4 @@ app.get('/teapot', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
-});
+}); 

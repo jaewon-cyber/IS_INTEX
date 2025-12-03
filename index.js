@@ -15,7 +15,7 @@ app.set("view engine", "ejs");
 // --- 2. SESSION SETUP ---
 app.use(
     session({
-        secret: process.env.SESSION_SECRET || 'ellarises-secret',
+        secret: process.env.SESSION_SECRET || 'my-super-secret-key-12345',
         resave: false,
         saveUninitialized: false,
         cookie: { maxAge: 1000 * 60 * 60 * 24 }
@@ -34,6 +34,18 @@ const knex = require("knex")({
         ssl: process.env.DB_SSL ? {rejectUnauthorized: false} : false
     }
 });
+
+// for local use
+// const knex = require("knex")({
+//     client: "pg",
+//     connection: {
+//         host : process.env.DB_HOST || "localhost",
+//         user : process.env.DB_USER || "postgres",
+//         password : process.env.DB_PASSWORD || "admin1234",
+//         database : process.env.DB_NAME || "ellarises",
+//         port : process.env.DB_PORT || 5432  // PostgreSQL 16 typically uses port 5434
+//     }
+// });
 
 
 
@@ -285,14 +297,54 @@ app.post('/participants/delete/:id', isLogged, isManager, async (req, res) => {
 // 5. Events Maintenance
 app.get('/events', isLogged, async (req, res) => {
     const search = req.query.search || '';
+    const msg = req.query.msg;
+
+    // Set up alert values (default null)
+    let alertMessage = null;
+    let alertType = "info";
+
+    switch (msg) {
+        case "registered":
+            alertMessage = "You have successfully registered for the event!";
+            alertType = "success";
+            break;
+        case "already":
+            alertMessage = "You are already registered for this event.";
+            alertType = "warning";
+            break;
+        case "nodate":
+            alertMessage = "No upcoming event dates are available.";
+            alertType = "secondary";
+            break;
+        case "notfound":
+            alertMessage = "Participant record not found.";
+            alertType = "danger";
+            break;
+        case "error":
+            alertMessage = "An error occurred while processing your registration.";
+            alertType = "danger";
+            break;
+    }
+
     try {
-        // 테이블명도 DB 실제 이름 확인 필요 (보통 소문자 추천)
-        const events = await knex('eventtemplates') 
+        const events = await knex('eventtemplates')
             .where('eventname', 'ilike', `%${search}%`)
             .orderBy('eventtemplateid');
-        res.render('events', { title: 'Events', events, search });
-    } catch (err) { console.error(err); res.send(err.message); }
+
+        res.render('events', { 
+            title: 'Events', 
+            events, 
+            search,
+            alertMessage,   // <-- FIX
+            alertType       // <-- FIX
+        });
+
+    } catch (err) { 
+        console.error(err); 
+        res.send(err.message); 
+    }
 });
+
 
 // --- EVENTS: ADD & EDIT ROUTES ---
 
@@ -411,11 +463,25 @@ app.get('/profile', isLogged, async (req, res) => {
             .where({ participantid: participant.participantid })
             .orderBy('donationdate', 'desc');
 
-        res.render('profile', { 
-            title: 'My Profile', 
-            participant, 
-            myMilestones, 
-            myDonations 
+        const myRegistrations = await knex('participantregistrations as pr')
+            .join('eventoccurrences as eo', 'pr.eventoccurrenceid', 'eo.eventoccurrenceid')
+            .join('eventtemplates as et', 'eo.eventtemplateid', 'et.eventtemplateid')
+            .select(
+                'pr.participantregistrationid',
+                'et.eventname',
+                'et.eventtype',
+                'eo.eventdatetimestart',
+                'pr.registrationstatus'
+            )
+            .where('pr.participantid', participant.participantid)
+            .orderBy('eo.eventdatetimestart', 'desc');
+
+        res.render('profile', {
+            title: "My Profile",
+            participant,
+            myMilestones,
+            myDonations,
+            myRegistrations
         });
 
     } catch (err) {
@@ -423,6 +489,25 @@ app.get('/profile', isLogged, async (req, res) => {
         res.status(500).send("Error loading profile.");
     }
 });
+
+
+// Deregister from an event
+app.post('/profile/deregister/:registrationId', isLogged, async (req, res) => {
+    const registrationId = req.params.registrationId;
+
+    try {
+        await knex('participantregistrations')
+            .where({ participantregistrationid: registrationId })
+            .del();
+
+        res.redirect('/profile?msg=deregistered');
+
+    } catch (err) {
+        console.error("DEREG ERROR:", err);
+        res.redirect('/profile?msg=error');
+    }
+});
+
 
 // 2. Update My Profile (POST)
 app.post('/profile/edit', isLogged, async (req, res) => {
@@ -462,48 +547,57 @@ app.post('/events/register/:templateId', isLogged, async (req, res) => {
     const email = req.session.user.id;
 
     try {
-        // A. Get Participant ID
-        const participant = await knex('participantinfo').where({ participantemail: email }).first();
+        // A. Find Participant Record
+        const participant = await knex('participantinfo')
+            .where({ participantemail: email })
+            .first();
 
-        // B. Find an active Occurrence for this Template (Simplification: Find the latest one)
-        // In a real app, you would select a specific date. Here we auto-assign to the latest occurrence.
+        if (!participant) {
+            return res.redirect('/events?msg=notfound');
+        }
+
+        // B. Find Most Recent Event Occurrence
         const occurrence = await knex('eventoccurrences')
             .where({ eventtemplateid: templateId })
             .orderBy('eventdatetimestart', 'desc')
             .first();
 
         if (!occurrence) {
-            return res.send("<script>alert('No upcoming dates for this event.'); window.location.href='/events';</script>");
+            return res.redirect('/events?msg=nodate');
         }
 
-        // C. Check if already registered
+        // C. Check if Already Registered
         const existing = await knex('participantregistrations')
-            .where({ 
+            .where({
                 participantid: participant.participantid,
-                eventoccurrenceid: occurrence.eventoccurrenceid 
+                eventoccurrenceid: occurrence.eventoccurrenceid
             })
             .first();
 
         if (existing) {
-            return res.send("<script>alert('You are already registered for this event!'); window.location.href='/events';</script>");
+            return res.redirect('/events?msg=already');
         }
 
         // D. Create Registration
         await knex('participantregistrations').insert({
             participantid: participant.participantid,
             eventoccurrenceid: occurrence.eventoccurrenceid,
-            registrationcreatedat: new Date(), // Current Timestamp
-            registrationstatus: 'Registered'
+            registrationcreatedat: new Date(),
+            registrationstatus: 'Registered',
+            registrationattendedflag: null,
+            registrationcheckintime: null
         });
 
-        res.send("<script>alert('Successfully registered!'); window.location.href='/events';</script>");
+        return res.redirect('/events?msg=registered');
 
     } catch (err) {
         console.error("Registration Error:", err);
-        res.status(500).send("Error registering for event.");
+        return res.redirect('/events?msg=error');
     }
 });
-// 1. 마일스톤 목록 조회
+
+
+
 app.get('/milestones', isLogged, async (req, res) => {
     const search = req.query.search || '';
     try {
@@ -712,8 +806,11 @@ app.get('/admin/donations', isLogged, isManager, async (req, res) => {
 });
 
 //Tableau Dashboard page
-app.get('/dashboard', isManager, async (req, res) => {
-    res.render('dashboard', { title: 'Dashboard', error: null });
+app.get('/dashboard', isLogged, isManager, async (req, res) => {
+    res.render('dashboard', { 
+        title: 'Dashboard', 
+        error: null
+    });
 });
 
 

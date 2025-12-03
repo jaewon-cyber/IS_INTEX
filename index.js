@@ -710,6 +710,13 @@ app.get('/admin/donations', isLogged, isManager, async (req, res) => {
         res.status(500).send(err.message); 
     }
 });
+
+//Tableau Dashboard page
+app.get('/dashboard', isManager, async (req, res) => {
+    res.render('dashboard', { title: 'Dashboard', error: null });
+});
+
+
 // 418 Teapot
 app.get('/teapot', (req, res) => {
     res.status(418).render('teapot', { title: '418' });
